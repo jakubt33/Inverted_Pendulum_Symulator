@@ -5,17 +5,19 @@
 
 #define sqr(x) ((x)*(x))
 
+#define mDegToRad(x) (((x)*M_PI)/180)
+
 Pendulum::Pendulum()
 { 
-    this->kPendulumData.mass = 1.0;
-    this->kPendulumData.cartMass = 10.0;
-    this->kPendulumData.rodLength = 1.0;
+    this->kPendulumData.mass = 0.5;
+    this->kPendulumData.cartMass = 1.0;
+    this->kPendulumData.rodLength = 0.2;
     this->kPendulumData.gravity = 9.8;
-    this->kPendulumData.linFriction = 0.0; // Proportional to translational friction force
-    this->kPendulumData.angFriction = 1.0; // Proportional to rotational friction force
+    this->kPendulumData.linFriction = 0.01; // Proportional to translational friction force
+    this->kPendulumData.angFriction = 0.01; // Proportional to rotational friction force
     this->kPendulumData.currentForce = 0.0;
     this->kPendulumData.previousForce = 0.0;
-    this->kPendulumData.angularPosition = 0.1; // z1
+    this->kPendulumData.angularPosition = mDegToRad(1); // z1
     this->kPendulumData.angularVelocity = 0.0; // z2
     this->kPendulumData.cartPosition = 0.0; // z3
     this->kPendulumData.cartVelocity = 0.0; // z4
@@ -69,7 +71,7 @@ void Pendulum::integrateForwardRungeKutta4(double step)
 void Pendulum::Perform()
 {
    integrateForwardRungeKutta4(this->kPendulumData.timeStep);
-   qDebug() << this->kPendulumData.cartPosition;
+   //qDebug() << this->kPendulumData.cartPosition;
 }
 
 PendulumData_T Pendulum::GetPendulumData(void)
@@ -77,3 +79,34 @@ PendulumData_T Pendulum::GetPendulumData(void)
     return this->kPendulumData;
 }
 
+double Pendulum::GetCartPosition(void)
+{
+    return kPendulumData.cartPosition;
+}
+
+/*!
+ * \brief Pendulum::GetMassAbsoluteXPosition
+ * \return double - absolute X position of mass center point
+ */
+double Pendulum::GetMassAbsoluteXPosition(void)
+{
+    return ( kPendulumData.rodLength * sin(kPendulumData.angularPosition) + kPendulumData.cartPosition );
+}
+
+/*!
+ * \brief Pendulum::GetMassAbsoluteYPosition
+ * \return double - absolute Y position of mass center point
+ */
+double Pendulum::GetMassAbsoluteYPosition(void)
+{
+    return ( -kPendulumData.rodLength * cos(kPendulumData.angularPosition) );
+}
+
+/*!
+ * \brief Pendulum::setTimeInterval
+ * \param TimeStep  - sets time interval used in calculations [ms]
+ */
+void Pendulum::SetTimeInterval( double TimeStep )
+{
+    kPendulumData.timeStep = TimeStep/100;
+}

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>466</width>
-    <height>347</height>
+    <width>800</width>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,11 +17,23 @@
    <widget class="QGraphicsView" name="ViewSpace">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>431</width>
-      <height>281</height>
+      <x>0</x>
+      <y>0</y>
+      <width>800</width>
+      <height>300</height>
      </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::AdjustIgnored</enum>
+    </property>
+    <property name="transformationAnchor">
+     <enum>QGraphicsView::AnchorViewCenter</enum>
     </property>
    </widget>
   </widget>
@@ -30,7 +42,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>466</width>
+     <width>800</width>
      <height>21</height>
     </rect>
    </property>

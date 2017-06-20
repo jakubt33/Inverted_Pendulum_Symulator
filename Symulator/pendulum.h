@@ -28,8 +28,13 @@ class Pendulum : public QObject
 public:
     Pendulum();
     virtual ~Pendulum(){}
-    PendulumData_T GetPendulumData(void);
     void Perform();
+
+    PendulumData_T GetPendulumData(void);
+    double GetCartPosition(void);
+    double GetMassAbsoluteXPosition(void);
+    double GetMassAbsoluteYPosition(void);
+    void SetTimeInterval( double TimeStep );
 
 private:
     void integrateForwardRungeKutta4(double step);

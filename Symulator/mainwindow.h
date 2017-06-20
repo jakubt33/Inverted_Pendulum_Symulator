@@ -23,9 +23,6 @@ public:
 public slots:
     void UpdateDisplay(void);
 
-protected:
-    void paintEvent( QPaintEvent *e );
-
 private:
     Ui::MainWindow *ui;
     Pendulum oPendulum;

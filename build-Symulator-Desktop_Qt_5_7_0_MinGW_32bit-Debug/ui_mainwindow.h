@@ -36,16 +36,23 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(466, 347);
+        MainWindow->resize(800, 300);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         ViewSpace = new QGraphicsView(centralWidget);
         ViewSpace->setObjectName(QStringLiteral("ViewSpace"));
-        ViewSpace->setGeometry(QRect(20, 10, 431, 281));
+        ViewSpace->setGeometry(QRect(0, 0, 800, 300));
+        QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(ViewSpace->sizePolicy().hasHeightForWidth());
+        ViewSpace->setSizePolicy(sizePolicy);
+        ViewSpace->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
+        ViewSpace->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 466, 21));
+        menuBar->setGeometry(QRect(0, 0, 800, 21));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
