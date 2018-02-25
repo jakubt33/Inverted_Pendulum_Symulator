@@ -6,6 +6,14 @@
 #define sqr(x) ((x)*(x))
 
 #define mDegToRad(x) (((x)*M_PI)/180)
+#define mRadToDeg(x) (((x)*180)/M_PI)
+
+#define dMillimetersmInMeter    (1000)
+#define dWheelRadius    (40/dMillimetersmInMeter) //[mm]->so it must be divided by dMmInM to get in [m]
+#define dWheelLenght    (2*dWheelRadius*M_PI)
+#define dSpeedToRPM     (1/dWheelLenght) //v[m/s] * dSpeedToRPM = Omega[rpm]
+
+#define mLinearVelToOmega(x) ((x)*dSpeedToRPM)
 
 Pendulum::Pendulum()
 { 
@@ -79,6 +87,22 @@ PendulumData_T Pendulum::GetPendulumData(void)
     return this->kPendulumData;
 }
 
+double Pendulum::GetAngle(void)
+{
+    return this->kPendulumData.angularPosition;
+}
+
+double Pendulum::GetAngleDegrees(void)
+{
+    //it should return [-180, +180]
+    return mRadToDeg(this->kPendulumData.angularPosition);
+}
+
+double Pendulum::GetOmegaRPM(void)
+{
+    return mLinearVelToOmega(this->kPendulumData.cartVelocity);
+}
+
 double Pendulum::GetCartPosition(void)
 {
     return kPendulumData.cartPosition;
@@ -109,4 +133,13 @@ double Pendulum::GetMassAbsoluteYPosition(void)
 void Pendulum::SetTimeInterval( double TimeStep )
 {
     kPendulumData.timeStep = TimeStep/100;
+}
+
+/*!
+ * \brief void SetForce( double dForce )
+ * \param
+ */
+void Pendulum::SetForce( double dForce )
+{
+    this->kPendulumData.currentForce = dForce;
 }

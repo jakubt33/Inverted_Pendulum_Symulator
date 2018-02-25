@@ -7,6 +7,7 @@
 #include <QtCore>
 #include "pendulum.h"
 #include <QGraphicsScene>
+#include "charts.h"
 
 namespace Ui {
 class MainWindow;
@@ -22,11 +23,15 @@ public:
 
 public slots:
     void UpdateDisplay(void);
+    void Task8ms(void);
+    void Task32ms(void);
 
 private:
     Ui::MainWindow *ui;
     Pendulum oPendulum;
     QTimer *qTimer;
+    QTimer *qTimerTask8ms;
+    QTimer *qTimerTask32ms;
 
     QGraphicsScene *scene;
     QGraphicsLineItem *xLine;
@@ -34,6 +39,8 @@ private:
     QGraphicsLineItem *robotLine;
     QGraphicsEllipseItem *centerMassPoint;
     QGraphicsRectItem *cart;
+
+    Charts charts;
 };
 
 #endif // MAINWINDOW_H

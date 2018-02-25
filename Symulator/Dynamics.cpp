@@ -23,9 +23,9 @@
 
 Ivp::Dynamics::Dynamics(void)
 {
-	this->mass = 1.0;
-	this->cartMass = 10.0;
-	this->rodLength = 1.0;
+    this->mass = 1.6;
+    this->cartMass = 0.0;
+    this->rodLength = 0.14;
 	this->gravity = 9.8;
 	this->linFriction = 0.0; // Proportional to translational friction force
 	this->angFriction = 1.0; // Proportional to rotational friction force

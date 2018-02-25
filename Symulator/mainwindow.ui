@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>300</height>
+    <width>808</width>
+    <height>346</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QGraphicsView" name="ViewSpace">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>9</x>
       <y>0</y>
-      <width>800</width>
-      <height>300</height>
+      <width>791</width>
+      <height>281</height>
      </rect>
     </property>
     <property name="sizePolicy">
@@ -42,7 +42,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>808</width>
      <height>21</height>
     </rect>
    </property>

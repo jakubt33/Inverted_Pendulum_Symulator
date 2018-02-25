@@ -34,7 +34,11 @@ public:
     double GetCartPosition(void);
     double GetMassAbsoluteXPosition(void);
     double GetMassAbsoluteYPosition(void);
+    double GetAngle(void);
+    double GetAngleDegrees(void);
+    double GetOmegaRPM(void);
     void SetTimeInterval( double TimeStep );
+    void SetForce( double dForce );
 
 private:
     void integrateForwardRungeKutta4(double step);

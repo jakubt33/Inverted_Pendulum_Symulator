@@ -1,0 +1,14 @@
+INPUT(
+./release/main.o
+./release/mainwindow.o
+./release/pendulum.o
+./release/Motors.o
+./release/PID.o
+./release/PID_Usr.o
+./release/qcustomplot.o
+./release/charts.o
+./release/moc_mainwindow.o
+./release/moc_pendulum.o
+./release/moc_qcustomplot.o
+./release/moc_charts.o
+);
