@@ -15,7 +15,7 @@ public:
     explicit Charts(QWidget *parent = 0);
     ~Charts();
 
-    void addData( float newData );
+    void addData( float newAngle, float newForce );
 
 private slots:
     void makePlot();

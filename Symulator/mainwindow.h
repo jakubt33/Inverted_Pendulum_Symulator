@@ -26,6 +26,9 @@ public slots:
     void Task8ms(void);
     void Task32ms(void);
 
+private slots:
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     Pendulum oPendulum;

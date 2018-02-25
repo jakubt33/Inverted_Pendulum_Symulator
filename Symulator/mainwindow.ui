@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>808</width>
-    <height>346</height>
+    <height>374</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -34,6 +34,19 @@
     </property>
     <property name="transformationAnchor">
      <enum>QGraphicsView::AnchorViewCenter</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>290</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add force</string>
     </property>
    </widget>
   </widget>

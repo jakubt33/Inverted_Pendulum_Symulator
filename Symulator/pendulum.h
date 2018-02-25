@@ -39,6 +39,7 @@ public:
     double GetOmegaRPM(void);
     void SetTimeInterval( double TimeStep );
     void SetForce( double dForce );
+    double GetForce(void);
 
 private:
     void integrateForwardRungeKutta4(double step);

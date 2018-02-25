@@ -8,10 +8,10 @@
 #define mDegToRad(x) (((x)*M_PI)/180)
 #define mRadToDeg(x) (((x)*180)/M_PI)
 
-#define dMillimetersmInMeter    (1000)
-#define dWheelRadius    (40/dMillimetersmInMeter) //[mm]->so it must be divided by dMmInM to get in [m]
-#define dWheelLenght    (2*dWheelRadius*M_PI)
-#define dSpeedToRPM     (1/dWheelLenght) //v[m/s] * dSpeedToRPM = Omega[rpm]
+#define dMillimetersmInMeter    (1000.0)
+#define dWheelRadius    (40.0/dMillimetersmInMeter) //[mm]->so it must be divided by dMmInM to get in [m]
+#define dWheelLenght    (2.0*dWheelRadius*M_PI)
+#define dSpeedToRPM     (1.0/dWheelLenght) //v[m/s] * dSpeedToRPM = Omega[rpm]
 
 #define mLinearVelToOmega(x) ((x)*dSpeedToRPM)
 
@@ -25,7 +25,7 @@ Pendulum::Pendulum()
     this->kPendulumData.angFriction = 0.01; // Proportional to rotational friction force
     this->kPendulumData.currentForce = 0.0;
     this->kPendulumData.previousForce = 0.0;
-    this->kPendulumData.angularPosition = mDegToRad(1); // z1
+    this->kPendulumData.angularPosition = mDegToRad(5); // z1
     this->kPendulumData.angularVelocity = 0.0; // z2
     this->kPendulumData.cartPosition = 0.0; // z3
     this->kPendulumData.cartVelocity = 0.0; // z4
@@ -132,14 +132,20 @@ double Pendulum::GetMassAbsoluteYPosition(void)
  */
 void Pendulum::SetTimeInterval( double TimeStep )
 {
+    //calculations are slowered 100 times
     kPendulumData.timeStep = TimeStep/100;
 }
 
 /*!
- * \brief void SetForce( double dForce )
+ * \brief  Sets force
  * \param
  */
 void Pendulum::SetForce( double dForce )
 {
     this->kPendulumData.currentForce = dForce;
+}
+
+double Pendulum::GetForce(void)
+{
+    return this->kPendulumData.currentForce;
 }

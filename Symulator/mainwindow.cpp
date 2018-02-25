@@ -14,7 +14,7 @@
 #define dAxisXHorizon   ( 50/*[cm]*/ * dPxInCm )
 #define dAxisYHorizon   ( 30/*[cm]*/ * dPxInCm )
 
-#define dTimeInterval   ( 0.05/*[s]*/ )
+#define dTimeInterval   ( 1/*[ms]*/ )
 
 /* Private, const defines */
 #define dCmInMeter          ( 100 )
@@ -86,40 +86,43 @@ void MainWindow::UpdateDisplay(void)
     cart->setX( mMeterToPx( oPendulum.GetCartPosition() ) );
     centerMassPoint->setX( mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ) );
     centerMassPoint->setY( mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
-
+/*
     robotLine->setLine( mMeterToPx( oPendulum.GetCartPosition() ), 0,
                         mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
-
+*/
 
 }
 
 void MainWindow::Task8ms(void)
 {
-   /*! Execute standing functionality */
-   float PWM;
-   /*! Apply PID filter to motors to get required angle (output of omega regulator) */
-   oPID_Angle.ApplyPid( &oPID_Angle.Parameters, oPendulum.GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
+    /*! Execute standing functionality */
+    float PWM;
+    /*! Apply PID filter to motors to get required angle (output of omega regulator) */
+    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, oPendulum.GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
 
-   PWM = oPID_Angle.Parameters.OutSignal;
+    PWM = oPID_Angle.Parameters.OutSignal;
 
-   if     ( 0 < PWM && PWM <  100 ) PWM =  ( PWM / 10 ) * ( PWM / 10 );
-   else if( 0 > PWM && PWM > -100 ) PWM = -( PWM / 10 ) * ( PWM / 10 );
+    if     ( 0 < PWM && PWM <  100 ) PWM =  ( PWM / 10 ) * ( PWM / 10 );
+    else if( 0 > PWM && PWM > -100 ) PWM = -( PWM / 10 ) * ( PWM / 10 );
 
-   /*! Check if PWM is within boundaries */
-   ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
+    /*! Check if PWM is within boundaries */
+    ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
-   oPendulum.SetForce( (double)PWM/4000 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+    double force = (double)PWM/4000.0;
+    //oPendulum.SetForce( force );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
 
-   float angle = oPendulum.GetAngleDegrees();
-   if(angle>180.0)angle = angle - 360.0;
-    charts.addData(angle);
+    float angle = oPendulum.GetAngleDegrees();
+    if(angle>180.0)angle = angle - 360.0;
+
+  // charts.addData(angle, (float)oPendulum.GetForce() );
+        charts.addData(angle, PWM );
 }
 
 void MainWindow::Task32ms(void)
 {
     /*! Calculate mean omega of the robot */
     //oEncoders.Perform();
-    float OmegaMean = oPendulum.GetOmegaRPM();
+    float OmegaMean = (float)oPendulum.GetOmegaRPM();
     //float OmegaMean = ( oEncoders.GetOmegaLeft() + oEncoders.GetOmegaRight() ) / 2;
     //float OmegaDiff = ( oEncoders.GetOmegaLeft() - oEncoders.GetOmegaRight() );
 
@@ -128,4 +131,9 @@ void MainWindow::Task32ms(void)
     //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
     oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal /*+ AngleOffset*/ );
     //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    oPendulum.SetForce(10);
 }

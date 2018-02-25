@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>733</width>
-    <height>239</height>
+    <height>264</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,28 @@
     <rect>
      <x>19</x>
      <y>29</y>
-     <width>691</width>
+     <width>701</width>
      <height>171</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="angleNumber">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>220</y>
+     <width>64</width>
+     <height>23</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="forceNumber">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>220</y>
+     <width>64</width>
+     <height>23</height>
     </rect>
    </property>
   </widget>

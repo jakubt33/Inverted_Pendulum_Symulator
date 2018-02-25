@@ -15,6 +15,7 @@
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLCDNumber>
 #include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
@@ -23,15 +24,23 @@ class Ui_Charts
 {
 public:
     QCustomPlot *customPlot;
+    QLCDNumber *angleNumber;
+    QLCDNumber *forceNumber;
 
     void setupUi(QDialog *Charts)
     {
         if (Charts->objectName().isEmpty())
             Charts->setObjectName(QStringLiteral("Charts"));
-        Charts->resize(733, 239);
+        Charts->resize(733, 264);
         customPlot = new QCustomPlot(Charts);
         customPlot->setObjectName(QStringLiteral("customPlot"));
-        customPlot->setGeometry(QRect(19, 29, 691, 171));
+        customPlot->setGeometry(QRect(19, 29, 701, 171));
+        angleNumber = new QLCDNumber(Charts);
+        angleNumber->setObjectName(QStringLiteral("angleNumber"));
+        angleNumber->setGeometry(QRect(40, 220, 64, 23));
+        forceNumber = new QLCDNumber(Charts);
+        forceNumber->setObjectName(QStringLiteral("forceNumber"));
+        forceNumber->setGeometry(QRect(620, 220, 64, 23));
 
         retranslateUi(Charts);
 
