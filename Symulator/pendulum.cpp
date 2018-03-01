@@ -94,8 +94,9 @@ double Pendulum::GetAngle(void)
 
 double Pendulum::GetAngleDegrees(void)
 {
-    //it should return [-180, +180]
-    return mRadToDeg(this->kPendulumData.angularPosition);
+    double angle = mRadToDeg(this->kPendulumData.angularPosition);
+    if(angle>180.0)angle = angle - 360.0;
+    return angle;
 }
 
 double Pendulum::GetOmegaRPM(void)

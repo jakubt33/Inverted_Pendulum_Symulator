@@ -71,7 +71,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     InitializeMotors();
 
-    charts.show();
+    chartAngle.show();
+    chartAngle.setWindowTitle("Angle");
+    chartAngle.move(200,0);
+
+    chartPWM.show();
+    chartPWM.setWindowTitle("PWM");
+    chartPWM.move(600,0);
 }
 
 MainWindow::~MainWindow()
@@ -86,10 +92,10 @@ void MainWindow::UpdateDisplay(void)
     cart->setX( mMeterToPx( oPendulum.GetCartPosition() ) );
     centerMassPoint->setX( mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ) );
     centerMassPoint->setY( mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
-/*
+
     robotLine->setLine( mMeterToPx( oPendulum.GetCartPosition() ), 0,
                         mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
-*/
+
 
 }
 
@@ -108,14 +114,14 @@ void MainWindow::Task8ms(void)
     /*! Check if PWM is within boundaries */
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
-    double force = (double)PWM/4000.0;
-    //oPendulum.SetForce( force );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+    double force = (double)-PWM/40.0;
+    oPendulum.SetForce( force );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
 
     float angle = oPendulum.GetAngleDegrees();
-    if(angle>180.0)angle = angle - 360.0;
 
   // charts.addData(angle, (float)oPendulum.GetForce() );
-        charts.addData(angle, PWM );
+    chartAngle.addData( angle );
+    chartPWM.addData( PWM/5 );
 }
 
 void MainWindow::Task32ms(void)

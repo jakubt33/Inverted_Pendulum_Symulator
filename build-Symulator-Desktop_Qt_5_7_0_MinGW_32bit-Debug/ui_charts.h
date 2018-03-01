@@ -24,8 +24,7 @@ class Ui_Charts
 {
 public:
     QCustomPlot *customPlot;
-    QLCDNumber *angleNumber;
-    QLCDNumber *forceNumber;
+    QLCDNumber *customValue;
 
     void setupUi(QDialog *Charts)
     {
@@ -35,12 +34,9 @@ public:
         customPlot = new QCustomPlot(Charts);
         customPlot->setObjectName(QStringLiteral("customPlot"));
         customPlot->setGeometry(QRect(19, 29, 701, 171));
-        angleNumber = new QLCDNumber(Charts);
-        angleNumber->setObjectName(QStringLiteral("angleNumber"));
-        angleNumber->setGeometry(QRect(40, 220, 64, 23));
-        forceNumber = new QLCDNumber(Charts);
-        forceNumber->setObjectName(QStringLiteral("forceNumber"));
-        forceNumber->setGeometry(QRect(620, 220, 64, 23));
+        customValue = new QLCDNumber(Charts);
+        customValue->setObjectName(QStringLiteral("customValue"));
+        customValue->setGeometry(QRect(330, 210, 64, 23));
 
         retranslateUi(Charts);
 

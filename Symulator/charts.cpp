@@ -19,9 +19,6 @@ void Charts::makePlot()
     ui->customPlot->addGraph(); // blue line
     ui->customPlot->graph(0)->setPen(QPen(QColor(40, 110, 255)));
 
-    ui->customPlot->addGraph(); // red line
-    ui->customPlot->graph(1)->setPen(QPen(QColor(255, 0, 0)));
-
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%h:%m:%s");
     ui->customPlot->xAxis->setTicker(timeTicker);
@@ -33,18 +30,13 @@ void Charts::makePlot()
     connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
 }
 
-void Charts::addData( float newAngle, float newForce )
+void Charts::addData( float newData )
 {
     static double iterator = 0.0;
     iterator += 0.005;
 
-
-    ui->customPlot->graph(0)->addData(iterator, newAngle);
-    ui->angleNumber->display(newAngle);
-
-    ui->customPlot->graph(1)->addData(iterator, newForce);
-    ui->forceNumber->display(newForce);
-
+    ui->customPlot->graph(0)->addData(iterator, newData);
+    ui->customValue->display(newData);
 
     ui->customPlot->xAxis->setRange(iterator, 8, Qt::AlignRight);
     ui->customPlot->replot();

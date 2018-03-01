@@ -43,7 +43,8 @@ private:
     QGraphicsEllipseItem *centerMassPoint;
     QGraphicsRectItem *cart;
 
-    Charts charts;
+    Charts chartAngle;
+    Charts chartPWM;
 };
 
 #endif // MAINWINDOW_H
