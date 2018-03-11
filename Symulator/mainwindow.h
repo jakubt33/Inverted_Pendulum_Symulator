@@ -8,6 +8,7 @@
 #include "pendulum.h"
 #include <QGraphicsScene>
 #include "charts.h"
+#include "fuzzycontroller.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,12 +28,14 @@ public slots:
     void Task32ms(void);
 
 private slots:
-    void on_pushButton_clicked();
+    void on_buttonAddForce_clicked();
+    void on_buttonPauseResume_clicked();
 
 private:
     Ui::MainWindow *ui;
     Pendulum oPendulum;
-    QTimer *qTimer;
+    FuzzyController oFuzzyController;
+    QTimer *qTimerUpdateDisplay;
     QTimer *qTimerTask8ms;
     QTimer *qTimerTask32ms;
 

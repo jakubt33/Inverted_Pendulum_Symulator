@@ -16,6 +16,8 @@ public:
     ~Charts();
 
     void addData( float newData );
+    void setHeight(int height);
+    void setRange(float range);
 
 private slots:
     void makePlot();

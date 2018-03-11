@@ -41,3 +41,12 @@ void Charts::addData( float newData )
     ui->customPlot->xAxis->setRange(iterator, 8, Qt::AlignRight);
     ui->customPlot->replot();
 }
+
+void Charts::setHeight(int height){
+    this->resize(ui->customPlot->width(), height);
+    ui->customPlot->resize(ui->customPlot->width(), height-30);
+}
+
+void Charts::setRange(float range){
+    ui->customPlot->yAxis->setRange(-range, range);
+}

@@ -30,13 +30,23 @@ public:
     {
         if (Charts->objectName().isEmpty())
             Charts->setObjectName(QStringLiteral("Charts"));
-        Charts->resize(733, 264);
+        Charts->resize(647, 241);
         customPlot = new QCustomPlot(Charts);
         customPlot->setObjectName(QStringLiteral("customPlot"));
-        customPlot->setGeometry(QRect(19, 29, 701, 171));
-        customValue = new QLCDNumber(Charts);
+        customPlot->setGeometry(QRect(9, 9, 631, 221));
+        QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+        sizePolicy.setHorizontalStretch(0);
+        sizePolicy.setVerticalStretch(0);
+        sizePolicy.setHeightForWidth(customPlot->sizePolicy().hasHeightForWidth());
+        customPlot->setSizePolicy(sizePolicy);
+        customValue = new QLCDNumber(customPlot);
         customValue->setObjectName(QStringLiteral("customValue"));
-        customValue->setGeometry(QRect(330, 210, 64, 23));
+        customValue->setGeometry(QRect(540, 20, 64, 23));
+        QFont font;
+        font.setBold(true);
+        font.setWeight(75);
+        customValue->setFont(font);
+        customValue->setAutoFillBackground(true);
 
         retranslateUi(Charts);
 

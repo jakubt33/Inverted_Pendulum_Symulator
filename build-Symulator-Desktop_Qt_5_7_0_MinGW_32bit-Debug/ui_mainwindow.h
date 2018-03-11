@@ -29,7 +29,9 @@ class Ui_MainWindow
 public:
     QWidget *centralWidget;
     QGraphicsView *ViewSpace;
-    QPushButton *pushButton;
+    QPushButton *buttonAddForce;
+    QPushButton *buttonReset;
+    QPushButton *buttonPauseResume;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -38,12 +40,12 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(808, 374);
+        MainWindow->resize(699, 370);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         ViewSpace = new QGraphicsView(centralWidget);
         ViewSpace->setObjectName(QStringLiteral("ViewSpace"));
-        ViewSpace->setGeometry(QRect(9, 0, 791, 281));
+        ViewSpace->setGeometry(QRect(9, 0, 681, 281));
         QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -51,13 +53,19 @@ public:
         ViewSpace->setSizePolicy(sizePolicy);
         ViewSpace->setSizeAdjustPolicy(QAbstractScrollArea::AdjustIgnored);
         ViewSpace->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
-        pushButton = new QPushButton(centralWidget);
-        pushButton->setObjectName(QStringLiteral("pushButton"));
-        pushButton->setGeometry(QRect(20, 290, 75, 23));
+        buttonAddForce = new QPushButton(centralWidget);
+        buttonAddForce->setObjectName(QStringLiteral("buttonAddForce"));
+        buttonAddForce->setGeometry(QRect(20, 290, 75, 23));
+        buttonReset = new QPushButton(centralWidget);
+        buttonReset->setObjectName(QStringLiteral("buttonReset"));
+        buttonReset->setGeometry(QRect(110, 290, 75, 23));
+        buttonPauseResume = new QPushButton(centralWidget);
+        buttonPauseResume->setObjectName(QStringLiteral("buttonPauseResume"));
+        buttonPauseResume->setGeometry(QRect(200, 290, 75, 23));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 808, 21));
+        menuBar->setGeometry(QRect(0, 0, 699, 21));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -74,7 +82,9 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
-        pushButton->setText(QApplication::translate("MainWindow", "Add force", 0));
+        buttonAddForce->setText(QApplication::translate("MainWindow", "Add force", 0));
+        buttonReset->setText(QApplication::translate("MainWindow", "Reset", 0));
+        buttonPauseResume->setText(QApplication::translate("MainWindow", "PauseResume", 0));
     } // retranslateUi
 
 };

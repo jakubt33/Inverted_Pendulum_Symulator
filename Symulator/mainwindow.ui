@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>808</width>
-    <height>374</height>
+    <width>699</width>
+    <height>370</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <rect>
       <x>9</x>
       <y>0</y>
-      <width>791</width>
+      <width>681</width>
       <height>281</height>
      </rect>
     </property>
@@ -36,7 +36,7 @@
      <enum>QGraphicsView::AnchorViewCenter</enum>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="buttonAddForce">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -49,13 +49,39 @@
      <string>Add force</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="buttonReset">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>290</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Reset</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="buttonPauseResume">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>290</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PauseResume</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>808</width>
+     <width>699</width>
      <height>21</height>
     </rect>
    </property>

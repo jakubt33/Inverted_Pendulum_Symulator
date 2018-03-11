@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     scene = new QGraphicsScene(this);
     ui->ViewSpace->setScene(scene);
+    this->move(0, 300);
 
     /* Draw cartezian axis */
     xLine = scene->addLine(0 - dAxisXHorizon, 0, 0 + dAxisXHorizon, 0);
@@ -53,35 +54,38 @@ MainWindow::MainWindow(QWidget *parent) :
                                mMeterToPx(oPendulum.GetMassAbsoluteYPosition()) - dBodyCenterYOffset);
 
     /* Init timer that periodically calls pendulum calculations function and updates display */
-    qTimer = new QTimer(this);
-    connect(qTimer, SIGNAL(timeout()), this, SLOT(UpdateDisplay() ));
-    qTimer->start(dTimeInterval);
-
+    qTimerUpdateDisplay = new QTimer(this);
+    connect(qTimerUpdateDisplay, SIGNAL(timeout()), this, SLOT(UpdateDisplay() ));
     oPendulum.SetTimeInterval(dTimeInterval);
 
     /* Task 8ms */
     qTimerTask8ms = new QTimer(this);
     connect(qTimerTask8ms, SIGNAL(timeout()), this, SLOT(Task8ms() ));
-    qTimerTask8ms->start(8);
 
     /* Task 32ms */
     qTimerTask32ms = new QTimer(this);
     connect(qTimerTask32ms, SIGNAL(timeout()), this, SLOT(Task32ms() ));
-    qTimerTask32ms->start(32);
 
     InitializeMotors();
 
     chartAngle.show();
     chartAngle.setWindowTitle("Angle");
-    chartAngle.move(200,0);
+    chartAngle.move(0,0);
+    chartAngle.setRange(15.0f);
 
     chartPWM.show();
     chartPWM.setWindowTitle("PWM");
-    chartPWM.move(600,0);
+    chartPWM.move(700,0);
+    chartPWM.setHeight(500);
+    chartPWM.setRange(800.0f);
 }
 
 MainWindow::~MainWindow()
 {
+    delete qTimerUpdateDisplay;
+    delete qTimerTask8ms;
+    delete qTimerTask32ms;
+    delete scene;
     delete ui;
 }
 
@@ -98,13 +102,15 @@ void MainWindow::UpdateDisplay(void)
 
 
 }
-
+#define FUZZY_CONTROLLER 0
+#define PID_CONTROLLER 1
 void MainWindow::Task8ms(void)
 {
     /*! Execute standing functionality */
     float PWM;
+#if PID_CONTROLLER
     /*! Apply PID filter to motors to get required angle (output of omega regulator) */
-    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, oPendulum.GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
+    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum.GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
 
     PWM = oPID_Angle.Parameters.OutSignal;
 
@@ -114,14 +120,17 @@ void MainWindow::Task8ms(void)
     /*! Check if PWM is within boundaries */
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
-    double force = (double)-PWM/40.0;
-    oPendulum.SetForce( force );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+#elif FUZZY_CONTROLLER
+    oFuzzyController.updateInputs(oPendulum.GetAngleDegrees());
+    PWM = oFuzzyController.getOutput();
+#endif
 
+    oPendulum.SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+
+    /* Plot diagrams */
     float angle = oPendulum.GetAngleDegrees();
-
-  // charts.addData(angle, (float)oPendulum.GetForce() );
     chartAngle.addData( angle );
-    chartPWM.addData( PWM/5 );
+    chartPWM.addData( PWM );
 }
 
 void MainWindow::Task32ms(void)
@@ -133,13 +142,28 @@ void MainWindow::Task32ms(void)
     //float OmegaDiff = ( oEncoders.GetOmegaLeft() - oEncoders.GetOmegaRight() );
 
     /*! Apply PID filter to motors to get required omega */
-    oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    OmegaMean );
+    oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
     //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
     oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal /*+ AngleOffset*/ );
-    //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
+  //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_buttonAddForce_clicked()
 {
     oPendulum.SetForce(10);
+}
+
+void MainWindow::on_buttonPauseResume_clicked()
+{
+    if(qTimerUpdateDisplay->isActive())
+    {
+        qTimerTask8ms->stop();
+        qTimerTask32ms->stop();
+        qTimerUpdateDisplay->stop();
+    }else
+    {
+        qTimerTask8ms->start(8);
+        qTimerTask32ms->start(32);
+        qTimerUpdateDisplay->start(dTimeInterval);
+    }
 }
