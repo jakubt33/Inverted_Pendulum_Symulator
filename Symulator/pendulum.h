@@ -3,6 +3,8 @@
 
 #include <QtCore>
 
+#define pendulumAngleOffset 3.95f
+
 typedef struct
 {
     double mass;

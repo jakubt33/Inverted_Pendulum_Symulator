@@ -12,6 +12,8 @@ TEMPLATE = app
 
 INCLUDEPATH += $$PWD/Fuzzy/
 
+CONFIG += precompile_header
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     pendulum.cpp \

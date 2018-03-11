@@ -132,7 +132,7 @@ void MainWindow::Task8ms(void)
     chartAngle.addData( angle );
     chartPWM.addData( PWM );
 }
-
+#define AngleOffset pendulumAngleOffset
 void MainWindow::Task32ms(void)
 {
     /*! Calculate mean omega of the robot */
@@ -144,7 +144,7 @@ void MainWindow::Task32ms(void)
     /*! Apply PID filter to motors to get required omega */
     oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
     //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
-    oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal /*+ AngleOffset*/ );
+    oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset );
   //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 }
 
