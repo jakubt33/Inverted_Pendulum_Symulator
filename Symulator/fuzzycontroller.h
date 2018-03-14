@@ -13,7 +13,7 @@ public:
         return (float)outputPWM.getValue();
     }
     void  updateInputs(float Angle, float Omega, float Position, float Velocity);
-    void  updateInputs(float Angle);
+    void  updateInputs(float Angle, float Position);
 
 private:
     fl::Engine engine;

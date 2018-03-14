@@ -31,6 +31,7 @@ public:
     Pendulum();
     virtual ~Pendulum(){}
     void Perform();
+    void Initialize(void);
 
     PendulumData_T GetPendulumData(void);
     double GetCartPosition(void);

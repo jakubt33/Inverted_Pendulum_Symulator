@@ -17,6 +17,11 @@
 
 Pendulum::Pendulum()
 {
+    this->Initialize();
+}
+
+void Pendulum::Initialize(void)
+{
     this->kPendulumData.mass = 0.6;
     this->kPendulumData.cartMass = 1.0;
     this->kPendulumData.rodLength = 0.14;
@@ -140,7 +145,7 @@ double Pendulum::GetMassAbsoluteYPosition(void)
 void Pendulum::SetTimeInterval( double TimeStep )
 {
     //calculations are slowered 100 times
-    kPendulumData.timeStep = TimeStep/250;
+    kPendulumData.timeStep = TimeStep/500;
 }
 
 /*!

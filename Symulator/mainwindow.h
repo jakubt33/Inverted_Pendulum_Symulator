@@ -31,9 +31,11 @@ private slots:
     void on_buttonAddForce_clicked();
     void on_buttonPauseResume_clicked();
 
+    void on_buttonReset_clicked();
+
 private:
     Ui::MainWindow *ui;
-    Pendulum oPendulum;
+    Pendulum *oPendulum;
     FuzzyController oFuzzyController;
     QTimer *qTimerUpdateDisplay;
     QTimer *qTimerTask8ms;

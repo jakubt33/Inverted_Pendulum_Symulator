@@ -31,6 +31,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    oPendulum = new Pendulum();
+
     scene = new QGraphicsScene(this);
     ui->ViewSpace->setScene(scene);
     this->move(0, 300);
@@ -45,18 +47,18 @@ MainWindow::MainWindow(QWidget *parent) :
                                         dBodyRadius, dBodyRadius );
 
     /* Draw center mass point of the cart  */
-    cart = scene->addRect( mMeterToPx(oPendulum.GetCartPosition()) - dCartCenterXOffset, -dCartCenterYOffset, dCartWidth, dCartWidth);
+    cart = scene->addRect( mMeterToPx(oPendulum->GetCartPosition()) - dCartCenterXOffset, -dCartCenterYOffset, dCartWidth, dCartWidth);
 
     /* Connect cart and body wiht a line */
-    robotLine = scene->addLine(mMeterToPx(oPendulum.GetCartPosition()) - dCartCenterXOffset,
+    robotLine = scene->addLine(mMeterToPx(oPendulum->GetCartPosition()) - dCartCenterXOffset,
                                0,
-                               mMeterToPx(oPendulum.GetMassAbsoluteXPosition()) - dBodyCenterXOffset,
-                               mMeterToPx(oPendulum.GetMassAbsoluteYPosition()) - dBodyCenterYOffset);
+                               mMeterToPx(oPendulum->GetMassAbsoluteXPosition()) - dBodyCenterXOffset,
+                               mMeterToPx(oPendulum->GetMassAbsoluteYPosition()) - dBodyCenterYOffset);
 
     /* Init timer that periodically calls pendulum calculations function and updates display */
     qTimerUpdateDisplay = new QTimer(this);
     connect(qTimerUpdateDisplay, SIGNAL(timeout()), this, SLOT(UpdateDisplay() ));
-    oPendulum.SetTimeInterval(dTimeInterval);
+    oPendulum->SetTimeInterval(dTimeInterval);
 
     /* Task 8ms */
     qTimerTask8ms = new QTimer(this);
@@ -78,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent) :
     chartPWM.move(700,0);
     chartPWM.setHeight(500);
     chartPWM.setRange(800.0f);
+
+    this->UpdateDisplay();
 }
 
 MainWindow::~MainWindow()
@@ -87,30 +91,31 @@ MainWindow::~MainWindow()
     delete qTimerTask32ms;
     delete scene;
     delete ui;
+    delete oPendulum;
 }
 
 void MainWindow::UpdateDisplay(void)
 {
-    oPendulum.Perform();
+    oPendulum->Perform();
 
-    cart->setX( mMeterToPx( oPendulum.GetCartPosition() ) );
-    centerMassPoint->setX( mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ) );
-    centerMassPoint->setY( mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
+    cart->setX( mMeterToPx( oPendulum->GetCartPosition() ) );
+    centerMassPoint->setX( mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ) );
+    centerMassPoint->setY( mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
 
-    robotLine->setLine( mMeterToPx( oPendulum.GetCartPosition() ), 0,
-                        mMeterToPx( oPendulum.GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum.GetMassAbsoluteYPosition() ) );
+    robotLine->setLine( mMeterToPx( oPendulum->GetCartPosition() ), 0,
+                        mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
 
 
 }
 #define FUZZY_CONTROLLER 0
-#define PID_CONTROLLER 1
+#define PID_CONTROLLER   1
 void MainWindow::Task8ms(void)
 {
     /*! Execute standing functionality */
     float PWM;
 #if PID_CONTROLLER
     /*! Apply PID filter to motors to get required angle (output of omega regulator) */
-    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum.GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
+    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum->GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
 
     PWM = oPID_Angle.Parameters.OutSignal;
 
@@ -121,14 +126,14 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
-    oFuzzyController.updateInputs(oPendulum.GetAngleDegrees());
+    oFuzzyController.updateInputs(oPendulum->GetAngleDegrees(), oPendulum->GetCartPosition());
     PWM = oFuzzyController.getOutput();
 #endif
 
-    oPendulum.SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+    oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
 
     /* Plot diagrams */
-    float angle = oPendulum.GetAngleDegrees();
+    float angle = oPendulum->GetAngleDegrees();
     chartAngle.addData( angle );
     chartPWM.addData( PWM );
 }
@@ -137,7 +142,7 @@ void MainWindow::Task32ms(void)
 {
     /*! Calculate mean omega of the robot */
     //oEncoders.Perform();
-    float OmegaMean = (float)oPendulum.GetOmegaRPM();
+    float OmegaMean = (float)oPendulum->GetOmegaRPM();
     //float OmegaMean = ( oEncoders.GetOmegaLeft() + oEncoders.GetOmegaRight() ) / 2;
     //float OmegaDiff = ( oEncoders.GetOmegaLeft() - oEncoders.GetOmegaRight() );
 
@@ -150,7 +155,7 @@ void MainWindow::Task32ms(void)
 
 void MainWindow::on_buttonAddForce_clicked()
 {
-    oPendulum.SetForce(10);
+    oPendulum->SetForce(10);
 }
 
 void MainWindow::on_buttonPauseResume_clicked()
@@ -166,4 +171,17 @@ void MainWindow::on_buttonPauseResume_clicked()
         qTimerTask32ms->start(32);
         qTimerUpdateDisplay->start(dTimeInterval);
     }
+}
+
+void MainWindow::on_buttonReset_clicked()
+{
+    qTimerTask8ms->stop();
+    qTimerTask32ms->stop();
+    qTimerUpdateDisplay->stop();
+    InitializeMotors();
+
+    oPendulum->Initialize();
+    this->UpdateDisplay();
+    oPendulum->Initialize();
+    oPendulum->SetTimeInterval(dTimeInterval);
 }
