@@ -75,6 +75,29 @@
      <string>PauseResume</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="setAngle">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>290</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Set Angle</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editAngle">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>290</y>
+      <width>31</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

@@ -3,7 +3,7 @@
 
 #include <QtCore>
 
-#define pendulumAngleOffset 3.95f
+#define pendulumAngleOffset 0 /*3.95f*/
 
 typedef struct
 {
@@ -37,12 +37,13 @@ public:
     double GetCartPosition(void);
     double GetMassAbsoluteXPosition(void);
     double GetMassAbsoluteYPosition(void);
-    double GetAngle(void);
-    double GetAngleDegrees(void);
+    double GetAngularPosition(void);
+    double GetAngularVelocity(void);
     double GetOmegaRPM(void);
     void SetTimeInterval( double TimeStep );
     void SetForce( double dForce );
     double GetForce(void);
+    void SetAngle(float newAngle);
 
 private:
     void integrateForwardRungeKutta4(double step);

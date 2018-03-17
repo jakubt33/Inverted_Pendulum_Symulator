@@ -94,20 +94,20 @@ PendulumData_T Pendulum::GetPendulumData(void)
     return this->kPendulumData;
 }
 
-double Pendulum::GetAngle(void)
-{
-    return this->kPendulumData.angularPosition;
-}
-
 /*!
  * \brief Pendulum::GetAngleDegrees
  * \return float value from 180 to 180
  */
-double Pendulum::GetAngleDegrees(void)
+double Pendulum::GetAngularPosition(void)
 {
     double angle = fmod(mRadToDeg(this->kPendulumData.angularPosition), 360.0);
     if(angle>180.0)angle = angle - 360.0;
     return angle;
+}
+
+double Pendulum::GetAngularVelocity(void)
+{
+    return mRadToDeg(this->kPendulumData.angularVelocity);
 }
 
 double Pendulum::GetOmegaRPM(void)
@@ -160,4 +160,9 @@ void Pendulum::SetForce( double dForce )
 double Pendulum::GetForce(void)
 {
     return this->kPendulumData.currentForce;
+}
+
+void Pendulum::SetAngle(float newAngle)
+{
+    this->kPendulumData.angularPosition = mDegToRad(newAngle);
 }

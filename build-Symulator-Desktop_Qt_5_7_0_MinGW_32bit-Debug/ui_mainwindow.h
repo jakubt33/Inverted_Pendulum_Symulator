@@ -15,6 +15,7 @@
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
 #include <QtWidgets/QPushButton>
@@ -32,6 +33,8 @@ public:
     QPushButton *buttonAddForce;
     QPushButton *buttonReset;
     QPushButton *buttonPauseResume;
+    QPushButton *setAngle;
+    QLineEdit *editAngle;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -62,6 +65,12 @@ public:
         buttonPauseResume = new QPushButton(centralWidget);
         buttonPauseResume->setObjectName(QStringLiteral("buttonPauseResume"));
         buttonPauseResume->setGeometry(QRect(200, 290, 75, 23));
+        setAngle = new QPushButton(centralWidget);
+        setAngle->setObjectName(QStringLiteral("setAngle"));
+        setAngle->setGeometry(QRect(570, 290, 75, 23));
+        editAngle = new QLineEdit(centralWidget);
+        editAngle->setObjectName(QStringLiteral("editAngle"));
+        editAngle->setGeometry(QRect(660, 290, 31, 20));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -85,6 +94,7 @@ public:
         buttonAddForce->setText(QApplication::translate("MainWindow", "Add force", 0));
         buttonReset->setText(QApplication::translate("MainWindow", "Reset", 0));
         buttonPauseResume->setText(QApplication::translate("MainWindow", "PauseResume", 0));
+        setAngle->setText(QApplication::translate("MainWindow", "Set Angle", 0));
     } // retranslateUi
 
 };

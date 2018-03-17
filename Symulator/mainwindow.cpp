@@ -75,6 +75,11 @@ MainWindow::MainWindow(QWidget *parent) :
     chartAngle.move(0,0);
     chartAngle.setRange(15.0f);
 
+    chartPosition.show();
+    chartPosition.setWindowTitle("Position");
+    chartPosition.move(0,0);
+    chartPosition.setRange(40.0f);
+
     chartPWM.show();
     chartPWM.setWindowTitle("PWM");
     chartPWM.move(700,0);
@@ -97,7 +102,11 @@ MainWindow::~MainWindow()
 void MainWindow::UpdateDisplay(void)
 {
     oPendulum->Perform();
+    this->RedrawPendulum();
+}
 
+void MainWindow::RedrawPendulum(void)
+{
     cart->setX( mMeterToPx( oPendulum->GetCartPosition() ) );
     centerMassPoint->setX( mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ) );
     centerMassPoint->setY( mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
@@ -105,10 +114,12 @@ void MainWindow::UpdateDisplay(void)
     robotLine->setLine( mMeterToPx( oPendulum->GetCartPosition() ), 0,
                         mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
 
-
+    scene->setActivePanel(cart);
 }
-#define FUZZY_CONTROLLER 0
-#define PID_CONTROLLER   1
+
+#define FUZZY_CONTROLLER 1
+#define PID_CONTROLLER   0
+
 void MainWindow::Task8ms(void)
 {
     /*! Execute standing functionality */
@@ -126,15 +137,18 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
-    oFuzzyController.updateInputs(oPendulum->GetAngleDegrees(), oPendulum->GetCartPosition());
+    oFuzzyController.updateInputs(oPendulum->GetAngularPosition(),
+                                  oPendulum->GetAngularVelocity(),
+                                  oPendulum->GetCartPosition()*100);
     PWM = oFuzzyController.getOutput();
 #endif
 
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
 
     /* Plot diagrams */
-    float angle = oPendulum->GetAngleDegrees();
-    chartAngle.addData( angle );
+    chartAngle.addData( oPendulum->GetAngularPosition() );
+    chartPosition.addData( oPendulum->GetAngularVelocity() );
+    //chartPosition.addData( oPendulum->GetCartPosition()*100 );
     chartPWM.addData( PWM );
 }
 #define AngleOffset pendulumAngleOffset
@@ -155,7 +169,7 @@ void MainWindow::Task32ms(void)
 
 void MainWindow::on_buttonAddForce_clicked()
 {
-    oPendulum->SetForce(10);
+    oPendulum->SetForce(50);
 }
 
 void MainWindow::on_buttonPauseResume_clicked()
@@ -181,7 +195,16 @@ void MainWindow::on_buttonReset_clicked()
     InitializeMotors();
 
     oPendulum->Initialize();
-    this->UpdateDisplay();
-    oPendulum->Initialize();
+    RedrawPendulum();
     oPendulum->SetTimeInterval(dTimeInterval);
+}
+
+void MainWindow::on_setAngle_clicked()
+{
+    float newAngle = ui->editAngle->text().toFloat();
+    if(newAngle == newAngle)
+    {
+        oPendulum->SetAngle(newAngle);
+    }
+    RedrawPendulum();
 }

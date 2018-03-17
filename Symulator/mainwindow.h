@@ -33,7 +33,11 @@ private slots:
 
     void on_buttonReset_clicked();
 
+    void on_setAngle_clicked();
+
 private:
+    void RedrawPendulum(void);
+
     Ui::MainWindow *ui;
     Pendulum *oPendulum;
     FuzzyController oFuzzyController;
@@ -49,6 +53,7 @@ private:
     QGraphicsRectItem *cart;
 
     Charts chartAngle;
+    Charts chartPosition;
     Charts chartPWM;
 };
 
