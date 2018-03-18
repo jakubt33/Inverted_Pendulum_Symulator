@@ -139,16 +139,17 @@ void MainWindow::Task8ms(void)
 #elif FUZZY_CONTROLLER
     oFuzzyController.updateInputs(oPendulum->GetAngularPosition(),
                                   oPendulum->GetAngularVelocity(),
-                                  oPendulum->GetCartPosition()*100);
+                                  oPendulum->GetCartPosition()*100,
+                                  oPendulum->GetOmegaRPM());
     PWM = oFuzzyController.getOutput();
 #endif
 
+    //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
-
     /* Plot diagrams */
     chartAngle.addData( oPendulum->GetAngularPosition() );
-    chartPosition.addData( oPendulum->GetAngularVelocity() );
     //chartPosition.addData( oPendulum->GetCartPosition()*100 );
+    chartPosition.addData( oPendulum->GetOmegaRPM() );
     chartPWM.addData( PWM );
 }
 #define AngleOffset pendulumAngleOffset

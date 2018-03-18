@@ -101,7 +101,8 @@ PendulumData_T Pendulum::GetPendulumData(void)
 double Pendulum::GetAngularPosition(void)
 {
     double angle = fmod(mRadToDeg(this->kPendulumData.angularPosition), 360.0);
-    if(angle>180.0)angle = angle - 360.0;
+    if(angle>180.0)angle -= 360.0;
+    else if(angle<-180.0)angle += 360.0;
     return angle;
 }
 
