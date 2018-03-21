@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    ui->editForce->setText("200");
     oPendulum = new Pendulum();
 
     scene = new QGraphicsScene(this);
@@ -148,8 +149,10 @@ void MainWindow::Task8ms(void)
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
     /* Plot diagrams */
     chartAngle.addData( oPendulum->GetAngularPosition() );
-    //chartPosition.addData( oPendulum->GetCartPosition()*100 );
-    chartPosition.addData( oPendulum->GetOmegaRPM() );
+    //chartAngle.setWindowTitle("Position");
+    //chartAngle.addData( oPendulum->GetCartPosition()*100 );
+    chartPosition.setWindowTitle("Omega");
+    chartPosition.addData( oPendulum->GetAngularVelocity() );
     chartPWM.addData( PWM );
 }
 #define AngleOffset pendulumAngleOffset
@@ -170,7 +173,12 @@ void MainWindow::Task32ms(void)
 
 void MainWindow::on_buttonAddForce_clicked()
 {
-    oPendulum->SetForce(50);
+    float newForce = ui->editForce->text().toFloat();
+    if(newForce == newForce)
+    {
+        oPendulum->SetForce(newForce);
+    }
+
 }
 
 void MainWindow::on_buttonPauseResume_clicked()
