@@ -2,6 +2,7 @@
 #define CHARTS_H
 
 #include <QDialog>
+#include <QString>
 
 namespace Ui {
 class Charts;
@@ -16,8 +17,11 @@ public:
     ~Charts();
 
     void addData( float newData );
+    void addData( float newData1, float newData2 );
     void setHeight(int height);
     void setRange(float range);
+    void setLabelName(QString label1, QString label2);
+    void setLabelName(QString label1);
 
 private slots:
     void makePlot();

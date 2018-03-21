@@ -73,16 +73,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartAngle.show();
     chartAngle.setWindowTitle("Angle");
+    chartAngle.setLabelName("Ang Pos", "Ang Vel x10");
     chartAngle.move(0,0);
-    chartAngle.setRange(15.0f);
+    chartAngle.setRange(35.0f);
 
     chartPosition.show();
     chartPosition.setWindowTitle("Position");
+    chartPosition.setLabelName("Position [cm]");
     chartPosition.move(0,0);
     chartPosition.setRange(40.0f);
 
     chartPWM.show();
     chartPWM.setWindowTitle("PWM");
+    chartPWM.setLabelName("PWM");
     chartPWM.move(700,0);
     chartPWM.setHeight(500);
     chartPWM.setRange(800.0f);
@@ -148,11 +151,8 @@ void MainWindow::Task8ms(void)
     //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
     /* Plot diagrams */
-    chartAngle.addData( oPendulum->GetAngularPosition() );
-    //chartAngle.setWindowTitle("Position");
-    //chartAngle.addData( oPendulum->GetCartPosition()*100 );
-    chartPosition.setWindowTitle("Omega");
-    chartPosition.addData( oPendulum->GetAngularVelocity() );
+    chartAngle.addData( oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity()/10.0 );
+    chartPosition.addData( oPendulum->GetCartPosition()*100.0 );
     chartPWM.addData( PWM );
 }
 #define AngleOffset pendulumAngleOffset

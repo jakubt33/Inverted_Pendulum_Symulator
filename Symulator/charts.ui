@@ -28,11 +28,30 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <widget class="QLCDNumber" name="customValue">
+   <widget class="QLCDNumber" name="customValue1">
     <property name="geometry">
      <rect>
-      <x>540</x>
+      <x>40</x>
       <y>20</y>
+      <width>64</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="customValue2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>40</y>
       <width>64</width>
       <height>23</height>
      </rect>
@@ -45,6 +64,32 @@
     </property>
     <property name="autoFillBackground">
      <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label1">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>20</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label2">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>40</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
     </property>
    </widget>
   </widget>

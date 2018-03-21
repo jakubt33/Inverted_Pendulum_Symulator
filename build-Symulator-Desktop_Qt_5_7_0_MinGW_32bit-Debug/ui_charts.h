@@ -16,6 +16,7 @@
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLCDNumber>
+#include <QtWidgets/QLabel>
 #include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
@@ -24,7 +25,10 @@ class Ui_Charts
 {
 public:
     QCustomPlot *customPlot;
-    QLCDNumber *customValue;
+    QLCDNumber *customValue1;
+    QLCDNumber *customValue2;
+    QLabel *label1;
+    QLabel *label2;
 
     void setupUi(QDialog *Charts)
     {
@@ -39,14 +43,25 @@ public:
         sizePolicy.setVerticalStretch(0);
         sizePolicy.setHeightForWidth(customPlot->sizePolicy().hasHeightForWidth());
         customPlot->setSizePolicy(sizePolicy);
-        customValue = new QLCDNumber(customPlot);
-        customValue->setObjectName(QStringLiteral("customValue"));
-        customValue->setGeometry(QRect(540, 20, 64, 23));
+        customValue1 = new QLCDNumber(customPlot);
+        customValue1->setObjectName(QStringLiteral("customValue1"));
+        customValue1->setGeometry(QRect(40, 20, 64, 20));
         QFont font;
         font.setBold(true);
         font.setWeight(75);
-        customValue->setFont(font);
-        customValue->setAutoFillBackground(true);
+        customValue1->setFont(font);
+        customValue1->setAutoFillBackground(true);
+        customValue2 = new QLCDNumber(customPlot);
+        customValue2->setObjectName(QStringLiteral("customValue2"));
+        customValue2->setGeometry(QRect(40, 40, 64, 23));
+        customValue2->setFont(font);
+        customValue2->setAutoFillBackground(true);
+        label1 = new QLabel(customPlot);
+        label1->setObjectName(QStringLiteral("label1"));
+        label1->setGeometry(QRect(110, 20, 91, 21));
+        label2 = new QLabel(customPlot);
+        label2->setObjectName(QStringLiteral("label2"));
+        label2->setGeometry(QRect(110, 40, 91, 20));
 
         retranslateUi(Charts);
 
@@ -56,6 +71,8 @@ public:
     void retranslateUi(QDialog *Charts)
     {
         Charts->setWindowTitle(QApplication::translate("Charts", "Dialog", 0));
+        label1->setText(QApplication::translate("Charts", "TextLabel", 0));
+        label2->setText(QApplication::translate("Charts", "TextLabel", 0));
     } // retranslateUi
 
 };
