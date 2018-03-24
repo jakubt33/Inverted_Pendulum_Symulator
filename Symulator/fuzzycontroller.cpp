@@ -129,9 +129,9 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         ruleBlock.addRule(Rule::parse("if inPosition is SP then dstANGLE is SOUT", &engine));
         ruleBlock.addRule(Rule::parse("if inPosition is RP then dstANGLE is LOUT", &engine));
 
-        ruleBlock.addRule(Rule::parse("if inVelocity is LV then dstANGLE is ROUT", &engine));
-        ruleBlock.addRule(Rule::parse("if inVelocity is SV then dstANGLE is SOUT", &engine));
-        ruleBlock.addRule(Rule::parse("if inVelocity is RV then dstANGLE is LOUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is LV then dstANGLE is ROUT with 0.75", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is SV then dstANGLE is SOUT with 0.75", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is RV then dstANGLE is LOUT with 0.75", &engine));
 
         engine.addRuleBlock(&ruleBlock);
     }
