@@ -86,19 +86,21 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         inputPosition.setName("inPosition");
         inputPosition.setDescription("");
         inputPosition.setEnabled(true);
-        inputPosition.setRange(-20.0, 20.0);//[cm]
+        inputPosition.setRange(-30.0, 30.0);//[cm]
         inputPosition.setLockValueInRange(true);
-        inputPosition.addTerm(new Trapezoid("LP", -21.0f, -20.0f, -5.0f, 5.0f));
-        inputPosition.addTerm(new Trapezoid("RP", -5.0f, 5.0f, 20.0f, 21.0f));
+        inputPosition.addTerm(new Trapezoid("LP", -31.0f, -30.0f, -15.0f, 0.0f));
+        inputPosition.addTerm(new Triangle("SP",  -15.0f,  0.0f,   15.0f));
+        inputPosition.addTerm(new Trapezoid("RP",  0.0f,  15.0f,   30.0f, 31.0f));
         engine.addInputVariable(&inputPosition);
 
         inputVelocity.setName("inVelocity");
         inputVelocity.setDescription("");
         inputVelocity.setEnabled(true);
-        inputVelocity.setRange(-5.0, 5.0);//[RPM]
+        inputVelocity.setRange(-4.0, 4.0);//[RPM]
         inputVelocity.setLockValueInRange(true);
-        inputVelocity.addTerm(new Trapezoid("LV", -5.1f, -5.0f, -2.5f, 2.5f));
-        inputVelocity.addTerm(new Trapezoid("RV", -2.5f, 2.5f, 5.0f, 5.1f));
+        inputVelocity.addTerm(new Trapezoid("LV", -4.1f, -4.0f, -1.0f, 0.0f));
+        inputVelocity.addTerm(new Triangle("SV", -0.5f, 0.0f, 0.5f));
+        inputVelocity.addTerm(new Trapezoid("RV", 0.0f, 1.0f, 4.0f, 4.1f));
         engine.addInputVariable(&inputVelocity);
 
         outputVar.setName("dstANGLE");
@@ -110,9 +112,9 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         outputVar.setDefuzzifier(new Centroid);
         outputVar.setDefaultValue(0.0);
         outputVar.setLockPreviousValue(false);
-        outputVar.addTerm(new Triangle("LOUT",  -10.1f, -10.0f, -1.0f));
-        outputVar.addTerm(new Trapezoid("SOUT",  -3.0f,  -1.0f,  1.0f, 3.0f));
-        outputVar.addTerm(new Triangle("ROUT",    1.0f,  10.0f, 10.1f));
+        outputVar.addTerm(new Trapezoid("LOUT",  -10.1f, -10.0f, -5.0f, -1.0f));
+        outputVar.addTerm(new Trapezoid("SOUT",  -3.0f,  -1.0f,   1.0f,  3.0f));
+        outputVar.addTerm(new Trapezoid("ROUT",   1.0f,   5.0f,   10.0f, 10.1f));
         engine.addOutputVariable(&outputVar);
 
         ruleBlock.setName("mamdani");
@@ -124,10 +126,11 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         ruleBlock.setActivation(new General);
 
         ruleBlock.addRule(Rule::parse("if inPosition is LP then dstANGLE is ROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inPosition is SP then dstANGLE is SOUT", &engine));
         ruleBlock.addRule(Rule::parse("if inPosition is RP then dstANGLE is LOUT", &engine));
-        //ruleBlock.addRule(Rule::parse("if ( inPosition is not RP and inPosition is not LP ) then dstANGLE is SOUT", &engine));
 
         ruleBlock.addRule(Rule::parse("if inVelocity is LV then dstANGLE is ROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is SV then dstANGLE is SOUT", &engine));
         ruleBlock.addRule(Rule::parse("if inVelocity is RV then dstANGLE is LOUT", &engine));
 
         engine.addRuleBlock(&ruleBlock);
@@ -149,7 +152,13 @@ void FuzzyController::setDesiredPosition(float newPosition)
     dstPosition = newPosition;
 }
 
+float FuzzyController::getDesiredPosition( void )
+{
+    return dstPosition;
+}
+
 void FuzzyController::execute(void)
 {
     engine.process();
 }
+

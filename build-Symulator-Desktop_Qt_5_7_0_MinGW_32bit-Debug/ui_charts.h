@@ -34,10 +34,10 @@ public:
     {
         if (Charts->objectName().isEmpty())
             Charts->setObjectName(QStringLiteral("Charts"));
-        Charts->resize(647, 241);
+        Charts->resize(647, 338);
         customPlot = new QCustomPlot(Charts);
         customPlot->setObjectName(QStringLiteral("customPlot"));
-        customPlot->setGeometry(QRect(9, 9, 631, 221));
+        customPlot->setGeometry(QRect(9, 9, 631, 321));
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);

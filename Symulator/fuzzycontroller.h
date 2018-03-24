@@ -14,6 +14,7 @@ public:
     float getOutput();
     void updateInputs(float currentPosition, float currentVelocity);
     void setDesiredPosition(float newPosition);
+    float getDesiredPosition( void );
     void execute(void);
 
 private:

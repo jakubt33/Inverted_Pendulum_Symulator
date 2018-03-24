@@ -11,8 +11,8 @@
 #define dCartWidth      ( 5/*[cm]*/ * dPxInCm )
 #define dBodyRadius     ( 5/*[cm]*/ * dPxInCm )
 
-#define dAxisXHorizon   ( 50/*[cm]*/ * dPxInCm )
-#define dAxisYHorizon   ( 30/*[cm]*/ * dPxInCm )
+#define dAxisXHorizon   ( 60/*[cm]*/ * dPxInCm )
+#define dAxisYHorizon   ( 20/*[cm]*/ * dPxInCm )
 
 #define dTimeInterval   ( 1/*[ms]*/ )
 
@@ -36,11 +36,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     scene = new QGraphicsScene(this);
     ui->ViewSpace->setScene(scene);
-    this->move(0, 300);
+    this->move(650, 520);
 
     /* Draw cartezian axis */
     xLine = scene->addLine(0 - dAxisXHorizon, 0, 0 + dAxisXHorizon, 0);
-    yLine = scene->addLine(0, 0 - dAxisYHorizon, 0, 0 + dAxisYHorizon);
+    yLine = scene->addLine(0, -dAxisYHorizon, 0, 0 + dAxisYHorizon/5);
 
     /* Draw center mass point of the body of pendulum */
     centerMassPoint = scene->addEllipse( - dBodyCenterXOffset,
@@ -75,13 +75,13 @@ MainWindow::MainWindow(QWidget *parent) :
     chartAngle.setWindowTitle("Angle");
     chartAngle.setLabelName("Ang Pos", "Ang Vel x10");
     chartAngle.move(0,0);
-    chartAngle.setRange(35.0f);
+    chartAngle.setRange(15.0f);
 
     chartPosition.show();
     chartPosition.setWindowTitle("Position");
-    chartPosition.setLabelName("Position [cm]");
-    chartPosition.move(0,0);
-    chartPosition.setRange(40.0f);
+    chartPosition.setLabelName("Position [cm]", "Velocity[RPM]x5");
+    chartPosition.move(0,400);
+    chartPosition.setRange(20.0f);
 
     chartPWM.show();
     chartPWM.setWindowTitle("PWM");
@@ -155,8 +155,8 @@ void MainWindow::Task8ms(void)
     //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
     /* Plot diagrams */
-    chartAngle.addData( oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity()/10.0 );
-    chartPosition.addData( oPendulum->GetCartPosition()*100.0 );
+    chartAngle.addData( oPendulum->GetAngularPosition(), oFuzzyControllerAngle->getDesiredPosition(), oPendulum->GetAngularVelocity()/10.0 );
+    chartPosition.addData( oPendulum->GetCartPosition()*100.0, 0, oPendulum->GetOmegaRPM()*5 );
     chartPWM.addData( PWM );
 }
 #define AngleOffset pendulumAngleOffset

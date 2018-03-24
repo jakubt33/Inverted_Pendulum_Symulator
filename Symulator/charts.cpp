@@ -19,8 +19,16 @@ void Charts::makePlot()
     ui->customPlot->addGraph(); // blue line
     ui->customPlot->graph(0)->setPen(QPen(QColor(0, 0, 255)));
     ui->label1->setStyleSheet("QLabel { color : blue; }");
+
+    QPen pen;
+    pen.setStyle(Qt::DotLine);
+    pen.setColor(QColor(0, 0, 255));
+    ui->customPlot->addGraph(); // blue line, dotted
+    ui->customPlot->graph(1)->setPen(pen);
+    ui->label1->setStyleSheet("QLabel { color : blue; }");
+
     ui->customPlot->addGraph(); // green line
-    ui->customPlot->graph(1)->setPen(QPen(QColor(0, 255, 0)));
+    ui->customPlot->graph(2)->setPen(QPen(QColor(0, 255, 0)));
     ui->label2->setStyleSheet("QLabel { color : green; }");
 
 
@@ -29,6 +37,7 @@ void Charts::makePlot()
     ui->customPlot->xAxis->setTicker(timeTicker);
     ui->customPlot->axisRect()->setupFullAxesBox();
     ui->customPlot->yAxis->setRange(-180.0f, 180.0f);
+    ui->customPlot->yAxis->grid()->setSubGridVisible(true);
 
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
@@ -47,13 +56,14 @@ void Charts::addData( float newData )
     ui->customPlot->replot();
 }
 
-void Charts::addData( float newData1, float newData2 )
+void Charts::addData( float newData1, float newData1Dot, float newData2 )
 {
     static double iterator = 0.0;
     iterator += 0.005;
 
     ui->customPlot->graph(0)->addData(iterator, newData1);
-    ui->customPlot->graph(1)->addData(iterator, newData2);
+    ui->customPlot->graph(1)->addData(iterator, newData1Dot);
+    ui->customPlot->graph(2)->addData(iterator, newData2);
     ui->customValue1->display(newData1);
     ui->customValue2->display(newData2);
 

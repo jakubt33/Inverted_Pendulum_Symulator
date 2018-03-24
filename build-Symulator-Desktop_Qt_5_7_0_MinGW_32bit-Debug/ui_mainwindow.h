@@ -44,12 +44,12 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(699, 283);
+        MainWindow->resize(699, 252);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         ViewSpace = new QGraphicsView(centralWidget);
         ViewSpace->setObjectName(QStringLiteral("ViewSpace"));
-        ViewSpace->setGeometry(QRect(10, 10, 681, 181));
+        ViewSpace->setGeometry(QRect(10, 10, 681, 151));
         QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -59,22 +59,22 @@ public:
         ViewSpace->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         buttonAddForce = new QPushButton(centralWidget);
         buttonAddForce->setObjectName(QStringLiteral("buttonAddForce"));
-        buttonAddForce->setGeometry(QRect(460, 200, 75, 23));
+        buttonAddForce->setGeometry(QRect(460, 170, 75, 23));
         buttonReset = new QPushButton(centralWidget);
         buttonReset->setObjectName(QStringLiteral("buttonReset"));
-        buttonReset->setGeometry(QRect(10, 200, 75, 23));
+        buttonReset->setGeometry(QRect(10, 170, 75, 23));
         buttonPauseResume = new QPushButton(centralWidget);
         buttonPauseResume->setObjectName(QStringLiteral("buttonPauseResume"));
-        buttonPauseResume->setGeometry(QRect(90, 200, 75, 23));
+        buttonPauseResume->setGeometry(QRect(90, 170, 75, 23));
         setAngle = new QPushButton(centralWidget);
         setAngle->setObjectName(QStringLiteral("setAngle"));
-        setAngle->setGeometry(QRect(580, 200, 75, 23));
+        setAngle->setGeometry(QRect(580, 170, 75, 23));
         editAngle = new QLineEdit(centralWidget);
         editAngle->setObjectName(QStringLiteral("editAngle"));
-        editAngle->setGeometry(QRect(660, 200, 31, 20));
+        editAngle->setGeometry(QRect(660, 170, 31, 20));
         editForce = new QLineEdit(centralWidget);
         editForce->setObjectName(QStringLiteral("editForce"));
-        editForce->setGeometry(QRect(540, 200, 31, 20));
+        editForce->setGeometry(QRect(540, 170, 31, 20));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));

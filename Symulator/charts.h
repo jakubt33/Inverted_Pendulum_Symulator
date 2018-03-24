@@ -17,7 +17,7 @@ public:
     ~Charts();
 
     void addData( float newData );
-    void addData( float newData1, float newData2 );
+    void addData( float newData1, float newData1Dot, float newData2 );
     void setHeight(int height);
     void setRange(float range);
     void setLabelName(QString label1, QString label2);
