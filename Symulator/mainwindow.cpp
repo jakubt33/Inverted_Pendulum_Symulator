@@ -91,6 +91,9 @@ MainWindow::MainWindow(QWidget *parent) :
     chartPWM.setRange(800.0f);
 
     this->UpdateDisplay();
+
+    oFuzzyControllerAngle = new FuzzyController(FUZZY_CONTROLLER::AngleRegulation);
+    oFuzzyControllerPosition = new FuzzyController(FUZZY_CONTROLLER::PositionRegulation);
 }
 
 MainWindow::~MainWindow()
@@ -101,6 +104,8 @@ MainWindow::~MainWindow()
     delete scene;
     delete ui;
     delete oPendulum;
+    delete oFuzzyControllerAngle;
+    delete oFuzzyControllerPosition;
 }
 
 void MainWindow::UpdateDisplay(void)
@@ -141,11 +146,10 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
-    oFuzzyController.updateInputs(oPendulum->GetAngularPosition(),
-                                  oPendulum->GetAngularVelocity(),
-                                  oPendulum->GetCartPosition()*100,
-                                  oPendulum->GetOmegaRPM());
-    PWM = oFuzzyController.getOutput();
+    oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(),
+                                        oPendulum->GetAngularVelocity());
+    oFuzzyControllerAngle->execute();
+    PWM = oFuzzyControllerAngle->getOutput();
 #endif
 
     //if(PWM<50) PWM = 0;
@@ -158,6 +162,7 @@ void MainWindow::Task8ms(void)
 #define AngleOffset pendulumAngleOffset
 void MainWindow::Task32ms(void)
 {
+#if PID_CONTROLLER
     /*! Calculate mean omega of the robot */
     //oEncoders.Perform();
     float OmegaMean = (float)oPendulum->GetOmegaRPM();
@@ -168,7 +173,14 @@ void MainWindow::Task32ms(void)
     oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
     //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
     oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset );
-  //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
+    //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
+#elif FUZZY_CONTROLLER
+    //Updates position and evalate destination angle
+    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
+                                           oPendulum->GetOmegaRPM());
+    oFuzzyControllerPosition->execute();
+    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+#endif
 }
 
 void MainWindow::on_buttonAddForce_clicked()

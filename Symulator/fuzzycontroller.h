@@ -2,30 +2,31 @@
 #define FUZZYCONTROLLER_H
 
 #include "Fuzzy/fl/Headers.h"
+namespace FUZZY_CONTROLLER {
+enum TypeOfRegulation_T { AngleRegulation, PositionRegulation } ;
+}
 
 class FuzzyController
 {
 public:
-    FuzzyController();
+    FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegulation);
 
-    float getOutput(){
-        engine.process();
-        return (float)outputPWM.getValue();
-    }
-    void  updateInputs(float Angle, float Omega, float Position, float Velocity);
-    void  updateInputs(float Angle, float Omega, float Position);
+    float getOutput();
+    void updateInputs(float currentPosition, float currentVelocity);
+    void setDesiredPosition(float newPosition);
+    void execute(void);
 
 private:
+    float dstPosition;
+
     fl::Engine engine;
 
-    fl::InputVariable inputAngle;
-    fl::InputVariable inputOmega;
     fl::InputVariable inputPosition;
     fl::InputVariable inputVelocity;
 
     fl::RuleBlock ruleBlock;
 
-    fl::OutputVariable outputPWM;
+    fl::OutputVariable outputVar;
 };
 
 #endif // FUZZYCONTROLLER_H

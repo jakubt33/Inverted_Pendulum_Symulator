@@ -40,7 +40,8 @@ private:
 
     Ui::MainWindow *ui;
     Pendulum *oPendulum;
-    FuzzyController oFuzzyController;
+    FuzzyController *oFuzzyControllerAngle;
+    FuzzyController *oFuzzyControllerPosition;
     QTimer *qTimerUpdateDisplay;
     QTimer *qTimerTask8ms;
     QTimer *qTimerTask32ms;
