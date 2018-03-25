@@ -89,9 +89,9 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         inputPosition.setRange(-100.0, 100.0);//[cm]
         inputPosition.setLockValueInRange(true);
         inputPosition.addTerm(new Triangle("HLP", -101.0f, -100.0f, -15.0));
-        inputPosition.addTerm(new Triangle("LLP", -100.0f, -15.0, 0.0f));
-        inputPosition.addTerm(new Triangle("SP",  -15.0f, 0.0f, 15.0f));
-        inputPosition.addTerm(new Triangle("LRP",  0.0f, 15.0f, 100.0f));
+        inputPosition.addTerm(new Triangle("LLP", -100.0f, -30.0, 0.0f));
+        inputPosition.addTerm(new Triangle("SP",  -30.0f, 0.0f, 30.0f));
+        inputPosition.addTerm(new Triangle("LRP",  0.0f, 30.0f, 100.0f));
         inputPosition.addTerm(new Triangle("HRP",  15.0f, 100.0f, 101.0f));
         engine.addInputVariable(&inputPosition);
 
