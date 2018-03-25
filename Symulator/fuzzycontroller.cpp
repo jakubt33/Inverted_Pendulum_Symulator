@@ -86,35 +86,41 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         inputPosition.setName("inPosition");
         inputPosition.setDescription("");
         inputPosition.setEnabled(true);
-        inputPosition.setRange(-30.0, 30.0);//[cm]
+        inputPosition.setRange(-100.0, 100.0);//[cm]
         inputPosition.setLockValueInRange(true);
-        inputPosition.addTerm(new Trapezoid("LP", -31.0f, -30.0f, -15.0f, 0.0f));
-        inputPosition.addTerm(new Triangle("SP",  -15.0f,  0.0f,   15.0f));
-        inputPosition.addTerm(new Trapezoid("RP",  0.0f,  15.0f,   30.0f, 31.0f));
+        inputPosition.addTerm(new Triangle("HLP", -101.0f, -100.0f, -15.0));
+        inputPosition.addTerm(new Triangle("LLP", -100.0f, -15.0, 0.0f));
+        inputPosition.addTerm(new Triangle("SP",  -15.0f, 0.0f, 15.0f));
+        inputPosition.addTerm(new Triangle("LRP",  0.0f, 15.0f, 100.0f));
+        inputPosition.addTerm(new Triangle("HRP",  15.0f, 100.0f, 101.0f));
         engine.addInputVariable(&inputPosition);
 
         inputVelocity.setName("inVelocity");
         inputVelocity.setDescription("");
         inputVelocity.setEnabled(true);
-        inputVelocity.setRange(-4.0, 4.0);//[RPM]
+        inputVelocity.setRange(-10.0, 10.0);//[RPM]
         inputVelocity.setLockValueInRange(true);
-        inputVelocity.addTerm(new Trapezoid("LV", -4.1f, -4.0f, -1.0f, 0.0f));
+        inputVelocity.addTerm(new Triangle("HLV", -10.1f, -10.0f, -2.0f));
+        inputVelocity.addTerm(new Triangle("LLV", -10.f, -2.0f, 0.0f));
         inputVelocity.addTerm(new Triangle("SV", -0.5f, 0.0f, 0.5f));
-        inputVelocity.addTerm(new Trapezoid("RV", 0.0f, 1.0f, 4.0f, 4.1f));
+        inputVelocity.addTerm(new Triangle("LRV", 0.0f, 2.0f, 10.f));
+        inputVelocity.addTerm(new Triangle("HRV", 2.0f, 10.0f, 10.1f));
         engine.addInputVariable(&inputVelocity);
 
         outputVar.setName("dstANGLE");
         outputVar.setDescription("");
         outputVar.setEnabled(true);
-        outputVar.setRange(-10.0, 10.0);
+        outputVar.setRange(-15.0, 15.0);
         outputVar.setLockValueInRange(true);
         outputVar.setAggregation(new Maximum);
         outputVar.setDefuzzifier(new Centroid);
         outputVar.setDefaultValue(0.0);
         outputVar.setLockPreviousValue(false);
-        outputVar.addTerm(new Trapezoid("LOUT",  -10.1f, -10.0f, -5.0f, -1.0f));
+        outputVar.addTerm(new Triangle("HLOUT",   -15.1f, -15.0f, -3.0f));
+        outputVar.addTerm(new Triangle("LLOUT",   -15.0f, -7.0f, -1.0f));
         outputVar.addTerm(new Trapezoid("SOUT",  -3.0f,  -1.0f,   1.0f,  3.0f));
-        outputVar.addTerm(new Trapezoid("ROUT",   1.0f,   5.0f,   10.0f, 10.1f));
+        outputVar.addTerm(new Triangle("LROUT",    1.0f,   7.0f,   15.0f));
+        outputVar.addTerm(new Triangle("HROUT",    3.0f,   15.0f,   15.1f));
         engine.addOutputVariable(&outputVar);
 
         ruleBlock.setName("mamdani");
@@ -125,13 +131,18 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         ruleBlock.setImplication(new AlgebraicProduct);
         ruleBlock.setActivation(new General);
 
-        ruleBlock.addRule(Rule::parse("if inPosition is LP then dstANGLE is ROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inPosition is HLP then dstANGLE is HROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inPosition is LLP then dstANGLE is LROUT", &engine));
         ruleBlock.addRule(Rule::parse("if inPosition is SP then dstANGLE is SOUT", &engine));
-        ruleBlock.addRule(Rule::parse("if inPosition is RP then dstANGLE is LOUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inPosition is LRP then dstANGLE is LLOUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inPosition is HRP then dstANGLE is HLOUT", &engine));
 
-        ruleBlock.addRule(Rule::parse("if inVelocity is LV then dstANGLE is ROUT with 0.75", &engine));
-        ruleBlock.addRule(Rule::parse("if inVelocity is SV then dstANGLE is SOUT with 0.75", &engine));
-        ruleBlock.addRule(Rule::parse("if inVelocity is RV then dstANGLE is LOUT with 0.75", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is HLV then dstANGLE is HROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is LLV then dstANGLE is LROUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is SV then dstANGLE is SOUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is LRV then dstANGLE is LLOUT", &engine));
+        ruleBlock.addRule(Rule::parse("if inVelocity is HRV then dstANGLE is HLOUT", &engine));
+
 
         engine.addRuleBlock(&ruleBlock);
     }

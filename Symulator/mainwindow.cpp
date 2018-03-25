@@ -146,6 +146,11 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
+    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
+                                           oPendulum->GetOmegaRPM());
+    oFuzzyControllerPosition->execute();
+    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+
     oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(),
                                         oPendulum->GetAngularVelocity());
     oFuzzyControllerAngle->execute();
@@ -155,9 +160,17 @@ void MainWindow::Task8ms(void)
     //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
     /* Plot diagrams */
-    chartAngle.addData( oPendulum->GetAngularPosition(), oFuzzyControllerAngle->getDesiredPosition(), oPendulum->GetAngularVelocity()/10.0 );
-    chartPosition.addData( oPendulum->GetCartPosition()*100.0, 0, oPendulum->GetOmegaRPM()*5 );
-    chartPWM.addData( PWM );
+    static float iterator = 0.0;
+    iterator += 0.008;
+    chartAngle.addData( oPendulum->GetAngularPosition(),
+                        oFuzzyControllerAngle->getDesiredPosition(),
+                        oPendulum->GetAngularVelocity()/10.0,
+                        iterator);
+    chartPosition.addData( oPendulum->GetCartPosition()*100.0,
+                           0,
+                           oPendulum->GetOmegaRPM()*5,
+                           iterator);
+    chartPWM.addData( PWM, iterator );
 }
 #define AngleOffset pendulumAngleOffset
 void MainWindow::Task32ms(void)
@@ -176,10 +189,10 @@ void MainWindow::Task32ms(void)
     //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 #elif FUZZY_CONTROLLER
     //Updates position and evalate destination angle
-    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
-                                           oPendulum->GetOmegaRPM());
-    oFuzzyControllerPosition->execute();
-    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+//    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
+//                                           oPendulum->GetOmegaRPM());
+//    oFuzzyControllerPosition->execute();
+//    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
 #endif
 }
 

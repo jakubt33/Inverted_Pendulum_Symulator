@@ -44,30 +44,24 @@ void Charts::makePlot()
     connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
 }
 
-void Charts::addData( float newData )
+void Charts::addData( float newData, float timeDelta )
 {
-    static double iterator = 0.0;
-    iterator += 0.005;
-
-    ui->customPlot->graph(0)->addData(iterator, newData);
+    ui->customPlot->graph(0)->addData(timeDelta, newData);
     ui->customValue1->display(newData);
 
-    ui->customPlot->xAxis->setRange(iterator, 8, Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
     ui->customPlot->replot();
 }
 
-void Charts::addData( float newData1, float newData1Dot, float newData2 )
+void Charts::addData( float newData1, float newData1Dot, float newData2, float timeDelta )
 {
-    static double iterator = 0.0;
-    iterator += 0.005;
-
-    ui->customPlot->graph(0)->addData(iterator, newData1);
-    ui->customPlot->graph(1)->addData(iterator, newData1Dot);
-    ui->customPlot->graph(2)->addData(iterator, newData2);
+    ui->customPlot->graph(0)->addData(timeDelta, newData1);
+    ui->customPlot->graph(1)->addData(timeDelta, newData1Dot);
+    ui->customPlot->graph(2)->addData(timeDelta, newData2);
     ui->customValue1->display(newData1);
     ui->customValue2->display(newData2);
 
-    ui->customPlot->xAxis->setRange(iterator, 8, Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
     ui->customPlot->replot();
 }
 
