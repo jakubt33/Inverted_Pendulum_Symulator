@@ -11,6 +11,7 @@ TARGET = Symulator
 TEMPLATE = app
 
 INCLUDEPATH += $$PWD/Fuzzy/
+INCLUDEPATH += $$PWD/FANN/include/
 
 CONFIG += precompile_header
 
@@ -124,7 +125,17 @@ SOURCES += main.cpp\
     Fuzzy/src/Exception.cpp \
     Fuzzy/src/fuzzylite.cpp \
     Fuzzy/src/fl_main.cpp \
-    fuzzycontroller.cpp
+    fuzzycontroller.cpp \
+    FANN/floatfann.c \
+    FANN/doublefann.c \
+    FANN/fann.c \
+    FANN/fann_cascade.c \
+    FANN/fann_error.c \
+    FANN/fann_io.c \
+    FANN/fann_train.c \
+    FANN/fann_train_data.c \
+    FANN/fixedfann.c \
+    FANN/floatfann.c
 
 HEADERS  += mainwindow.h \
     pendulum.h \
@@ -248,10 +259,25 @@ HEADERS  += mainwindow.h \
     Fuzzy/fl/fuzzylite.h \
     Fuzzy/fl/Headers.h \
     Fuzzy/fl/Operation.h \
-    fuzzycontroller.h
+    fuzzycontroller.h \
+    FANN/include/compat_time.h \
+    FANN/include/config.h \
+    FANN/include/doublefann.h \
+    FANN/include/fann.h \
+    FANN/include/fann_activation.h \
+    FANN/include/fann_cascade.h \
+    FANN/include/fann_cpp.h \
+    FANN/include/fann_data.h \
+    FANN/include/fann_error.h \
+    FANN/include/fann_internal.h \
+    FANN/include/fann_io.h \
+    FANN/include/fann_train.h \
+    FANN/include/floatfann.h
 
 FORMS    += mainwindow.ui \
     charts.ui
 
 DISTFILES += \
-    Fuzzy/readme.md
+    Fuzzy/readme.md \
+    FANN/include/CMakeLists.txt \
+    FANN/CMakeLists.txt

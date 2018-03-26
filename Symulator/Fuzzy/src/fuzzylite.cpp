@@ -22,8 +22,8 @@ namespace fl {
     int fuzzylite::_decimals = 3;
     std::ios_base::fmtflags fuzzylite::_scalarFormat = std::ios_base::fixed;
     scalar fuzzylite::_macheps = 1e-6;
-    bool fuzzylite::_debugging = true;
-    bool fuzzylite::_logging = true;
+    bool fuzzylite::_debugging = false;
+    bool fuzzylite::_logging = false;
 
     std::string platform() {
 #ifdef FL_UNIX

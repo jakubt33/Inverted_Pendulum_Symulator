@@ -110,6 +110,10 @@ INPUT(
 ./debug/fuzzylite.o
 ./debug/fl_main.o
 ./debug/fuzzycontroller.o
+./debug/floatfann.o
+./debug/doublefann.o
+./debug/fixedfann.o
+./debug/floatfann.o
 ./debug/moc_mainwindow.o
 ./debug/moc_pendulum.o
 ./debug/moc_qcustomplot.o

@@ -4,6 +4,8 @@
 #include "Embed/PID/PID.h"
 #include "Embed/Motors/Motors.h"
 
+#include "FANN/include/floatfann.h"
+
 /* Defined by user*/
 #define dPxInCm     ( 4 )
 

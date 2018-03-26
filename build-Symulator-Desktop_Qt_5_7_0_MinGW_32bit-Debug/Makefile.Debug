@@ -14,7 +14,7 @@ CXX           = g++
 DEFINES       = -DUNICODE -DQT_QML_DEBUG -DQT_PRINTSUPPORT_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_NEEDS_QMAIN
 CFLAGS        = -pipe -fno-keep-inline-dllexport -g -Wall -Wextra $(DEFINES)
 CXXFLAGS      = -pipe -fno-keep-inline-dllexport -g -std=gnu++11 -frtti -Wall -Wextra -fexceptions -mthreads $(DEFINES)
-INCPATH       = -I../Symulator -I. -I../Symulator/Fuzzy -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -Idebug -I. -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ 
+INCPATH       = -I../Symulator -I. -I../Symulator/Fuzzy -I../Symulator/FANN/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -Idebug -I. -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ 
 LINKER      =        g++
 LFLAGS        =        -Wl,-subsystem,windows -mthreads
 LIBS        =        -lmingw32 -LC:/Qt/Qt5.7.0/5.7/mingw53_32/lib C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libqtmaind.a -LC:/utils/postgresql/pgsql/lib -LC:/utils/my_sql/my_sql/lib -lshell32 C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libQt5Cored.a C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libQt5PrintSupportd.a C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libQt5Widgetsd.a C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libQt5Guid.a C:/Qt/Qt5.7.0/5.7/mingw53_32/lib/libQt5Cored.a 
@@ -153,7 +153,11 @@ SOURCES       = ../Symulator/main.cpp \
 		../Symulator/Fuzzy/src/Exception.cpp \
 		../Symulator/Fuzzy/src/fuzzylite.cpp \
 		../Symulator/Fuzzy/src/fl_main.cpp \
-		../Symulator/fuzzycontroller.cpp debug/moc_mainwindow.cpp \
+		../Symulator/fuzzycontroller.cpp \
+		../Symulator/FANN/floatfann.c \
+		../Symulator/FANN/doublefann.c \
+		../Symulator/FANN/fixedfann.c \
+		../Symulator/FANN/floatfann.c debug/moc_mainwindow.cpp \
 		debug/moc_pendulum.cpp \
 		debug/moc_qcustomplot.cpp \
 		debug/moc_charts.cpp
@@ -268,12 +272,18 @@ OBJECTS       = debug/main.o \
 		debug/fuzzylite.o \
 		debug/fl_main.o \
 		debug/fuzzycontroller.o \
+		debug/floatfann.o \
+		debug/doublefann.o \
+		debug/fixedfann.o \
+		debug/floatfann.o \
 		debug/moc_mainwindow.o \
 		debug/moc_pendulum.o \
 		debug/moc_qcustomplot.o \
 		debug/moc_charts.o
 
-DIST          = Fuzzy/readme.md ../Symulator/mainwindow.h \
+DIST          = Fuzzy/readme.md \
+		FANN/include/CMakeLists.txt \
+		FANN/CMakeLists.txt ../Symulator/mainwindow.h \
 		../Symulator/pendulum.h \
 		../Symulator/Embed/Motors/Motors.h \
 		../Symulator/Embed/PID/PID.h \
@@ -395,7 +405,20 @@ DIST          = Fuzzy/readme.md ../Symulator/mainwindow.h \
 		../Symulator/Fuzzy/fl/fuzzylite.h \
 		../Symulator/Fuzzy/fl/Headers.h \
 		../Symulator/Fuzzy/fl/Operation.h \
-		../Symulator/fuzzycontroller.h ../Symulator/main.cpp \
+		../Symulator/fuzzycontroller.h \
+		../Symulator/FANN/include/compat_time.h \
+		../Symulator/FANN/include/config.h \
+		../Symulator/FANN/include/doublefann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_cpp.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_io.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/floatfann.h ../Symulator/main.cpp \
 		../Symulator/mainwindow.cpp \
 		../Symulator/pendulum.cpp \
 		../Symulator/Embed/Motors/Motors.c \
@@ -505,7 +528,11 @@ DIST          = Fuzzy/readme.md ../Symulator/mainwindow.h \
 		../Symulator/Fuzzy/src/Exception.cpp \
 		../Symulator/Fuzzy/src/fuzzylite.cpp \
 		../Symulator/Fuzzy/src/fl_main.cpp \
-		../Symulator/fuzzycontroller.cpp
+		../Symulator/fuzzycontroller.cpp \
+		../Symulator/FANN/floatfann.c \
+		../Symulator/FANN/doublefann.c \
+		../Symulator/FANN/fixedfann.c \
+		../Symulator/FANN/floatfann.c
 QMAKE_TARGET  = Symulator
 DESTDIR        = debug/ #avoid trailing-slash linebreak
 TARGET         = Symulator.exe
@@ -529,7 +556,7 @@ dist:
 
 clean: compiler_clean 
 	-$(DEL_FILE) debug/main.o debug/mainwindow.o debug/pendulum.o debug/Motors.o debug/PID.o debug/PID_Usr.o debug/qcustomplot.o debug/charts.o debug/First.o debug/General.o debug/Highest.o debug/Last.o debug/Lowest.o debug/Proportional.o debug/Threshold.o debug/Bisector.o debug/Centroid.o debug/IntegralDefuzzifier.o debug/LargestOfMaximum.o debug/MeanOfMaximum.o debug/SmallestOfMaximum.o debug/WeightedAverage.o debug/WeightedAverageCustom.o debug/WeightedDefuzzifier.o debug/WeightedSum.o debug/WeightedSumCustom.o debug/ActivationFactory.o debug/DefuzzifierFactory.o debug/FactoryManager.o debug/FunctionFactory.o debug/HedgeFactory.o debug/SNormFactory.o debug/TermFactory.o debug/TNormFactory.o debug/Any.o debug/Extremely.o debug/HedgeFunction.o debug/Not.o debug/Seldom.o debug/Somewhat.o debug/Very.o debug/CppExporter.o debug/Exporter.o debug/FclExporter.o debug/FclImporter.o debug/FisExporter.o debug/FisImporter.o debug/FldExporter.o debug/FllExporter.o debug/FllImporter.o debug/Importer.o debug/JavaExporter.o debug/RScriptExporter.o debug/AlgebraicSum.o debug/BoundedSum.o debug/DrasticSum.o debug/EinsteinSum.o debug/HamacherSum.o debug/Maximum.o debug/NilpotentMaximum.o debug/NormalizedSum.o debug/SNormFunction.o debug/UnboundedSum.o debug/AlgebraicProduct.o debug/BoundedDifference.o debug/DrasticProduct.o debug/EinsteinProduct.o debug/HamacherProduct.o debug/Minimum.o debug/NilpotentMinimum.o debug/TNormFunction.o debug/Antecedent.o debug/Consequent.o debug/Expression.o debug/Rule.o debug/RuleBlock.o debug/Activated.o debug/Aggregated.o debug/Bell.o debug/Binary.o debug/Concave.o debug/Constant.o debug/Cosine.o debug/Discrete.o debug/Function.o debug/Gaussian.o debug/GaussianProduct.o debug/Linear.o debug/PiShape.o debug/Ramp.o debug/Rectangle.o debug/Sigmoid.o debug/SigmoidDifference.o debug/SigmoidProduct.o debug/Spike.o debug/SShape.o debug/Term.o debug/Trapezoid.o debug/Triangle.o debug/ZShape.o debug/InputVariable.o debug/OutputVariable.o debug/Variable.o debug/Benchmark.o debug/Complexity.o debug/Console.o
-	-$(DEL_FILE) debug/Engine.o debug/Exception.o debug/fuzzylite.o debug/fl_main.o debug/fuzzycontroller.o debug/moc_mainwindow.o debug/moc_pendulum.o debug/moc_qcustomplot.o debug/moc_charts.o
+	-$(DEL_FILE) debug/Engine.o debug/Exception.o debug/fuzzylite.o debug/fl_main.o debug/fuzzycontroller.o debug/floatfann.o debug/doublefann.o debug/fixedfann.o debug/floatfann.o debug/moc_mainwindow.o debug/moc_pendulum.o debug/moc_qcustomplot.o debug/moc_charts.o
 
 distclean: clean 
 	-$(DEL_FILE) $(DESTDIR_TARGET)
@@ -1000,6 +1027,7 @@ debug/moc_mainwindow.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QMainWi
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QGraphicsScene \
 		../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QDialog \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		../Symulator/fuzzycontroller.h \
 		../Symulator/Fuzzy/fl/Headers.h \
 		../Symulator/Fuzzy/fl/fuzzylite.h \
@@ -1112,7 +1140,7 @@ debug/moc_mainwindow.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QMainWi
 		../Symulator/Fuzzy/fl/variable/OutputVariable.h \
 		../Symulator/mainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/bin/moc.exe
-	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/mainwindow.h -o debug/moc_mainwindow.cpp
+	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/FANN/include' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/mainwindow.h -o debug/moc_mainwindow.cpp
 
 debug/moc_pendulum.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QtCore \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QtCoreDepends \
@@ -1296,7 +1324,7 @@ debug/moc_pendulum.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QtCore \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qtcoreversion.h \
 		../Symulator/pendulum.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/bin/moc.exe
-	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/pendulum.h -o debug/moc_pendulum.cpp
+	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/FANN/include' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/pendulum.h -o debug/moc_pendulum.cpp
 
 debug/moc_qcustomplot.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qglobal.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qconfig.h \
@@ -1781,7 +1809,7 @@ debug/moc_qcustomplot.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qglobal.h
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport/qtprintsupportversion.h \
 		../Symulator/qcustomplot.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/bin/moc.exe
-	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/qcustomplot.h -o debug/moc_qcustomplot.cpp
+	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/FANN/include' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/qcustomplot.h -o debug/moc_qcustomplot.cpp
 
 debug/moc_charts.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QDialog \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qdialog.h \
@@ -1881,9 +1909,10 @@ debug/moc_charts.cpp: C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QDialog \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qfiledevice.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/qvector2d.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/qtouchdevice.h \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/bin/moc.exe
-	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/charts.h -o debug/moc_charts.cpp
+	'C:\Qt\Qt5.7.0\5.7\mingw53_32\bin\moc.exe' $(DEFINES) -D__GNUC__ -DWIN32 -IC:/Qt/Qt5.7.0/5.7/mingw53_32/mkspecs/win32-g++ -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/Fuzzy' -I'C:/Users/Kuba/Dysk Google/Magisterka/Symulator/Symulator/FANN/include' -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtPrintSupport -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtANGLE -IC:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore -I. ../Symulator/charts.h -o debug/moc_charts.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -2843,6 +2872,7 @@ debug/main.o: ../Symulator/main.cpp ../Symulator/mainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QGraphicsScene \
 		../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QDialog \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		../Symulator/fuzzycontroller.h \
 		../Symulator/Fuzzy/fl/Headers.h \
 		../Symulator/Fuzzy/fl/fuzzylite.h \
@@ -3407,6 +3437,7 @@ debug/mainwindow.o: ../Symulator/mainwindow.cpp ../Symulator/mainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QGraphicsScene \
 		../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QDialog \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		../Symulator/fuzzycontroller.h \
 		../Symulator/Fuzzy/fl/Headers.h \
 		../Symulator/Fuzzy/fl/fuzzylite.h \
@@ -3523,13 +3554,24 @@ debug/mainwindow.o: ../Symulator/mainwindow.cpp ../Symulator/mainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QButtonGroup \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QGraphicsView \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QHeaderView \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QLineEdit \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QMenuBar \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QPushButton \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QStatusBar \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QToolBar \
 		../Symulator/Embed/PID/PID.h \
 		../Symulator/Embed/Motors/Motors.h \
-		../Symulator/commonDefines.h
+		../Symulator/commonDefines.h \
+		../Symulator/FANN/include/floatfann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/fixedfann.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_io.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/mainwindow.o ../Symulator/mainwindow.cpp
 
 debug/pendulum.o: ../Symulator/pendulum.cpp ../Symulator/pendulum.h \
@@ -4310,6 +4352,7 @@ debug/charts.o: ../Symulator/charts.cpp ../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qfiledevice.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/qvector2d.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/qtouchdevice.h \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		ui_charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QVariant \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QAction \
@@ -4345,6 +4388,8 @@ debug/charts.o: ../Symulator/charts.cpp ../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qrubberband.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QLCDNumber \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qlcdnumber.h \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QLabel \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qlabel.h \
 		../Symulator/qcustomplot.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QObject \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QPointer \
@@ -4362,7 +4407,6 @@ debug/charts.o: ../Symulator/charts.cpp ../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/QWheelEvent \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtGui/QPixmap \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QVector \
-		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QString \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QDateTime \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/qdatetime.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtCore/QMultiMap \
@@ -4668,7 +4712,6 @@ debug/charts.o: ../Symulator/charts.cpp ../Symulator/charts.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qfontcombobox.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qgroupbox.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qkeysequenceedit.h \
-		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qlabel.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qmainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qmdiarea.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/qmdisubwindow.h \
@@ -7294,6 +7337,83 @@ debug/fuzzycontroller.o: ../Symulator/fuzzycontroller.cpp ../Symulator/fuzzycont
 		../Symulator/Fuzzy/fl/variable/Variable.h \
 		../Symulator/Fuzzy/fl/variable/OutputVariable.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/fuzzycontroller.o ../Symulator/fuzzycontroller.cpp
+
+debug/floatfann.o: ../Symulator/FANN/floatfann.c ../Symulator/FANN/include/config.h \
+		../Symulator/FANN/include/floatfann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/fixedfann.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_io.h \
+		../Symulator/FANN/fann.c \
+		../Symulator/FANN/fann_io.c \
+		../Symulator/FANN/fann_train.c \
+		../Symulator/FANN/fann_train_data.c \
+		../Symulator/FANN/fann_error.c \
+		../Symulator/FANN/fann_cascade.c
+	$(CC) -c $(CFLAGS) $(INCPATH) -o debug/floatfann.o ../Symulator/FANN/floatfann.c
+
+debug/doublefann.o: ../Symulator/FANN/doublefann.c ../Symulator/FANN/include/config.h \
+		../Symulator/FANN/include/doublefann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/fixedfann.h \
+		../Symulator/FANN/include/floatfann.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_io.h \
+		../Symulator/FANN/fann.c \
+		../Symulator/FANN/fann_io.c \
+		../Symulator/FANN/fann_train.c \
+		../Symulator/FANN/fann_train_data.c \
+		../Symulator/FANN/fann_error.c \
+		../Symulator/FANN/fann_cascade.c
+	$(CC) -c $(CFLAGS) $(INCPATH) -o debug/doublefann.o ../Symulator/FANN/doublefann.c
+
+debug/fixedfann.o: ../Symulator/FANN/fixedfann.c ../Symulator/FANN/include/config.h \
+		../Symulator/FANN/include/fixedfann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/floatfann.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_io.h \
+		../Symulator/FANN/fann.c \
+		../Symulator/FANN/fann_io.c \
+		../Symulator/FANN/fann_train.c \
+		../Symulator/FANN/fann_train_data.c \
+		../Symulator/FANN/fann_error.c \
+		../Symulator/FANN/fann_cascade.c
+	$(CC) -c $(CFLAGS) $(INCPATH) -o debug/fixedfann.o ../Symulator/FANN/fixedfann.c
+
+debug/floatfann.o: ../Symulator/FANN/floatfann.c ../Symulator/FANN/include/config.h \
+		../Symulator/FANN/include/floatfann.h \
+		../Symulator/FANN/include/fann.h \
+		../Symulator/FANN/include/fixedfann.h \
+		../Symulator/FANN/include/fann_error.h \
+		../Symulator/FANN/include/fann_activation.h \
+		../Symulator/FANN/include/fann_data.h \
+		../Symulator/FANN/include/fann_internal.h \
+		../Symulator/FANN/include/fann_train.h \
+		../Symulator/FANN/include/fann_cascade.h \
+		../Symulator/FANN/include/fann_io.h \
+		../Symulator/FANN/fann.c \
+		../Symulator/FANN/fann_io.c \
+		../Symulator/FANN/fann_train.c \
+		../Symulator/FANN/fann_train_data.c \
+		../Symulator/FANN/fann_error.c \
+		../Symulator/FANN/fann_cascade.c
+	$(CC) -c $(CFLAGS) $(INCPATH) -o debug/floatfann.o ../Symulator/FANN/floatfann.c
 
 debug/moc_mainwindow.o: debug/moc_mainwindow.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o debug/moc_mainwindow.o debug/moc_mainwindow.cpp
