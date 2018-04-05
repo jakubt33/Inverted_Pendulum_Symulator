@@ -4,8 +4,6 @@
 #include "Embed/PID/PID.h"
 #include "Embed/Motors/Motors.h"
 
-#include "FANN/include/floatfann.h"
-
 /* Defined by user*/
 #define dPxInCm     ( 4 )
 
@@ -34,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     ui->editForce->setText("200");
-    oPendulum = new Pendulum();
+    oPendulum = std::unique_ptr<Pendulum>{new Pendulum};
 
     scene = new QGraphicsScene(this);
     ui->ViewSpace->setScene(scene);
@@ -94,20 +92,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->UpdateDisplay();
 
-    oFuzzyControllerAngle = new FuzzyController(FUZZY_CONTROLLER::AngleRegulation);
-    oFuzzyControllerPosition = new FuzzyController(FUZZY_CONTROLLER::PositionRegulation);
+    oFuzzyControllerAngle = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::AngleRegulation)};
+    oFuzzyControllerPosition = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::PositionRegulation)};
 }
 
 MainWindow::~MainWindow()
 {
+    delete ui;
     delete qTimerUpdateDisplay;
     delete qTimerTask8ms;
     delete qTimerTask32ms;
-    delete scene;
-    delete ui;
-    delete oPendulum;
-    delete oFuzzyControllerAngle;
-    delete oFuzzyControllerPosition;
 }
 
 void MainWindow::UpdateDisplay(void)
@@ -148,19 +142,33 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
-    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
-                                           oPendulum->GetOmegaRPM());
-    oFuzzyControllerPosition->execute();
-    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+    /*  ================  neuro part  ====================  */
+    float angularPosition = oPendulum->GetAngularPosition();
+    float angularVelocity = oPendulum->GetAngularVelocity();
+    float position = oPendulum->GetCartPosition()*100;
+    float velocity = oPendulum->GetOmegaRPM();
 
-    oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(),
-                                        oPendulum->GetAngularVelocity());
+    /* Calculate mean squared error from last 1 second */
+    oNN.updateInputs(angularPosition, angularVelocity,
+                     position, velocity,
+                     position*position /*temp error*/ );
+    oNN.execute();
+    float angleShift = oNN.getOutput();
+
+    /*  ================  fuzzy part  ====================  */
+    oFuzzyControllerPosition->updateInputs(position, velocity);
+    oFuzzyControllerPosition->execute();
+    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput() + angleShift);
+
+    oFuzzyControllerAngle->updateInputs(angularPosition,angularVelocity);
     oFuzzyControllerAngle->execute();
     PWM = oFuzzyControllerAngle->getOutput();
 #endif
 
     //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+
+
     /* Plot diagrams */
     static float iterator = 0.0;
     iterator += 0.008;
@@ -190,11 +198,7 @@ void MainWindow::Task32ms(void)
     oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset );
     //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 #elif FUZZY_CONTROLLER
-    //Updates position and evalate destination angle
-//    oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100,
-//                                           oPendulum->GetOmegaRPM());
-//    oFuzzyControllerPosition->execute();
-//    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+
 #endif
 }
 
@@ -205,7 +209,6 @@ void MainWindow::on_buttonAddForce_clicked()
     {
         oPendulum->SetForce(newForce);
     }
-
 }
 
 void MainWindow::on_buttonPauseResume_clicked()

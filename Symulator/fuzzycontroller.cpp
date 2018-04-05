@@ -88,7 +88,15 @@ FuzzyController::FuzzyController(FUZZY_CONTROLLER::TypeOfRegulation_T typeOfRegu
         inputPosition.setEnabled(true);
         inputPosition.setRange(-100.0, 100.0);//[cm]
         inputPosition.setLockValueInRange(true);
-        inputPosition.addTerm(new Triangle("HLP", -101.0f, -100.0f, -15.0));
+
+        HLP2.setVertexA(-159.0);
+        HLP2.setVertexB(-100.0);
+        HLP2.setVertexC(-15.0);
+        HLP2.setName("HLP");
+
+       // std::unique_ptr<fl::Triangle> HLP = new fl::Term("HLP", -101.0f, -100.0f, -15.0);
+       // HLP->setVertexA(-159.0);
+        inputPosition.addTerm(&HLP2);
         inputPosition.addTerm(new Triangle("LLP", -100.0f, -30.0, 0.0f));
         inputPosition.addTerm(new Triangle("SP",  -30.0f, 0.0f, 30.0f));
         inputPosition.addTerm(new Triangle("LRP",  0.0f, 30.0f, 100.0f));

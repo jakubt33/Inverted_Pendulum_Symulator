@@ -37,14 +37,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* Group: Creation, Destruction & Execution */
 	
 #ifndef FANN_INCLUDE
-/* just to allow for inclusion of fann.h in normal stuations where only floats are needed */ 
-#ifdef FIXEDFANN
-#include "fixedfann.h"
-#else
-#include "floatfann.h"
+#define FANN_INCLUDE
 #endif	/* FIXEDFANN  */
-	
-#else
 	
 /* COMPAT_TIME REPLACEMENT */ 
 #ifndef _WIN32
@@ -113,23 +107,20 @@ extern "C"
  to use dll's. To use dll's FANN_USE_DLL has to be defined before
  including the fann headers.
 */ 
-#if (_MSC_VER > 1300)
-#ifndef FANN_NO_DLL
-#define FANN_USE_DLL
-#endif	/* FANN_USE_LIB */
-#endif	/* _MSC_VER */
-#if defined(_MSC_VER) && (defined(FANN_USE_DLL) || defined(FANN_DLL_EXPORTS))
-#ifdef FANN_DLL_EXPORTS
-#define FANN_EXTERNAL __declspec(dllexport)
-#else							/*  */
-#define FANN_EXTERNAL __declspec(dllimport)
-#endif	/* FANN_DLL_EXPORTS*/
-#define FANN_API __stdcall
-#else							/*  */
+
 #define FANN_EXTERNAL
 #define FANN_API
-#endif	/* _MSC_VER */
+
 /* ----- End of macros used to define DLL external entrypoints ----- */ 
+
+typedef float fann_type;
+
+#define FLOATFANN
+#define FANNPRINTF "%.20e"
+#define FANNSCANF "%f"
+
+#define FANN_NO_DLL
+#define FANN_INCLUDE
 
 #include "fann_error.h"
 #include "fann_activation.h"
@@ -167,6 +158,7 @@ extern "C"
 		
 	This function appears in FANN >= 2.0.0.
 */ 
+//struct fann *fann_create_standard(void);
 FANN_EXTERNAL struct fann *FANN_API fann_create_standard(unsigned int num_layers, ...);
 
 /* Function: fann_create_standard_array
@@ -609,5 +601,3 @@ FANN_EXTERNAL unsigned int FANN_API fann_get_multiplier(struct fann *ann);
 #endif	/* __cplusplus */
 	
 #endif	/* __fann_h__ */
-	
-#endif /* NOT FANN_INCLUDE */

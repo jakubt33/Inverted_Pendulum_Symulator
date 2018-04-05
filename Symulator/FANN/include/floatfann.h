@@ -27,6 +27,7 @@ typedef float fann_type;
 #define FANNPRINTF "%.20e"
 #define FANNSCANF "%f"
 
+#define FANN_NO_DLL
 #define FANN_INCLUDE
 #include "fann.h"
 

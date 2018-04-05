@@ -9,6 +9,8 @@
 #include <QGraphicsScene>
 #include "charts.h"
 #include "fuzzycontroller.h"
+#include <memory>
+#include "neuralnetwork.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,9 +41,10 @@ private:
     void RedrawPendulum(void);
 
     Ui::MainWindow *ui;
-    Pendulum *oPendulum;
-    FuzzyController *oFuzzyControllerAngle;
-    FuzzyController *oFuzzyControllerPosition;
+    NeuralNetwork oNN;
+    std::unique_ptr<Pendulum> oPendulum;
+    std::unique_ptr<FuzzyController> oFuzzyControllerAngle;
+    std::unique_ptr<FuzzyController> oFuzzyControllerPosition;
     QTimer *qTimerUpdateDisplay;
     QTimer *qTimerTask8ms;
     QTimer *qTimerTask32ms;

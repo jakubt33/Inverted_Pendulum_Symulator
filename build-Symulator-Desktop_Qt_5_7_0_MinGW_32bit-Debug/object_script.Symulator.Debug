@@ -7,6 +7,13 @@ INPUT(
 ./debug/PID_Usr.o
 ./debug/qcustomplot.o
 ./debug/charts.o
+./debug/fann.o
+./debug/fann_cascade.o
+./debug/fann_error.o
+./debug/fann_io.o
+./debug/fann_train.o
+./debug/fann_train_data.o
+./debug/neuralnetwork.o
 ./debug/First.o
 ./debug/General.o
 ./debug/Highest.o
@@ -110,10 +117,6 @@ INPUT(
 ./debug/fuzzylite.o
 ./debug/fl_main.o
 ./debug/fuzzycontroller.o
-./debug/floatfann.o
-./debug/doublefann.o
-./debug/fixedfann.o
-./debug/floatfann.o
 ./debug/moc_mainwindow.o
 ./debug/moc_pendulum.o
 ./debug/moc_qcustomplot.o

@@ -29,7 +29,7 @@
 
 /* #define FANN_NO_SEED */
 
-FANN_EXTERNAL struct fann *FANN_API fann_create_standard(unsigned int num_layers, ...)
+struct fann *fann_create_standard(unsigned int num_layers, ...)
 {
 	struct fann *ann;
 	va_list layer_sizes;
@@ -56,6 +56,7 @@ FANN_EXTERNAL struct fann *FANN_API fann_create_standard(unsigned int num_layers
 	return ann;
 }
 
+#if 1
 FANN_EXTERNAL struct fann *FANN_API fann_create_standard_array(unsigned int num_layers, 
 															   const unsigned int *layers)
 {
@@ -1800,4 +1801,5 @@ void fann_seed_rand()
 	srand(GetTickCount());
 #endif
 }
+#endif
 

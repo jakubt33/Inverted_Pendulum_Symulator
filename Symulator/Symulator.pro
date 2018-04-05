@@ -10,8 +10,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 TARGET = Symulator
 TEMPLATE = app
 
-INCLUDEPATH += $$PWD/Fuzzy/
 INCLUDEPATH += $$PWD/FANN/include/
+INCLUDEPATH += $$PWD/Fuzzy/
 
 CONFIG += precompile_header
 
@@ -23,6 +23,13 @@ SOURCES += main.cpp\
     Embed/PID/PID_Usr.c \
     qcustomplot.cpp \
     charts.cpp \
+    FANN/fann.c \
+    FANN/fann_cascade.c \
+    FANN/fann_error.c \
+    FANN/fann_io.c \
+    FANN/fann_train.c \
+    FANN/fann_train_data.c \
+    neuralnetwork.cpp \
     Fuzzy/src/activation/First.cpp \
     Fuzzy/src/activation/General.cpp \
     Fuzzy/src/activation/Highest.cpp \
@@ -125,17 +132,7 @@ SOURCES += main.cpp\
     Fuzzy/src/Exception.cpp \
     Fuzzy/src/fuzzylite.cpp \
     Fuzzy/src/fl_main.cpp \
-    fuzzycontroller.cpp \
-    FANN/floatfann.c \
-    FANN/doublefann.c \
-    FANN/fann.c \
-    FANN/fann_cascade.c \
-    FANN/fann_error.c \
-    FANN/fann_io.c \
-    FANN/fann_train.c \
-    FANN/fann_train_data.c \
-    FANN/fixedfann.c \
-    FANN/floatfann.c
+    fuzzycontroller.cpp
 
 HEADERS  += mainwindow.h \
     pendulum.h \
@@ -145,6 +142,18 @@ HEADERS  += mainwindow.h \
     commonDefines.h \
     qcustomplot.h \
     charts.h \
+    FANN/include/compat_time.h \
+    FANN/include/config.h \
+    #FANN/include/doublefann.h \
+    FANN/include/fann.h \
+    FANN/include/fann_activation.h \
+    FANN/include/fann_cascade.h \
+    FANN/include/fann_data.h \
+    FANN/include/fann_error.h \
+    FANN/include/fann_internal.h \
+    FANN/include/fann_io.h \
+    FANN/include/fann_train.h \
+    #FANN/include/floatfann.h \
     Fuzzy/pre_struct.h \
     Fuzzy/user_param.h \
     Fuzzy/user_rules.h \
@@ -260,19 +269,7 @@ HEADERS  += mainwindow.h \
     Fuzzy/fl/Headers.h \
     Fuzzy/fl/Operation.h \
     fuzzycontroller.h \
-    FANN/include/compat_time.h \
-    FANN/include/config.h \
-    FANN/include/doublefann.h \
-    FANN/include/fann.h \
-    FANN/include/fann_activation.h \
-    FANN/include/fann_cascade.h \
-    FANN/include/fann_cpp.h \
-    FANN/include/fann_data.h \
-    FANN/include/fann_error.h \
-    FANN/include/fann_internal.h \
-    FANN/include/fann_io.h \
-    FANN/include/fann_train.h \
-    FANN/include/floatfann.h
+    neuralnetwork.h
 
 FORMS    += mainwindow.ui \
     charts.ui

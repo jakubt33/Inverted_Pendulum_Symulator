@@ -22,6 +22,7 @@ private:
 
     fl::Engine engine;
 
+    fl::Triangle HLP2;
     fl::InputVariable inputPosition;
     fl::InputVariable inputVelocity;
 
