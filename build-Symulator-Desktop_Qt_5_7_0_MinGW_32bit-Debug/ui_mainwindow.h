@@ -13,6 +13,7 @@
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
+#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLineEdit>
@@ -36,6 +37,7 @@ public:
     QPushButton *setAngle;
     QLineEdit *editAngle;
     QLineEdit *editForce;
+    QCheckBox *checkBoxTrainingMode;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -75,10 +77,13 @@ public:
         editForce = new QLineEdit(centralWidget);
         editForce->setObjectName(QStringLiteral("editForce"));
         editForce->setGeometry(QRect(540, 170, 31, 20));
+        checkBoxTrainingMode = new QCheckBox(centralWidget);
+        checkBoxTrainingMode->setObjectName(QStringLiteral("checkBoxTrainingMode"));
+        checkBoxTrainingMode->setGeometry(QRect(360, 172, 91, 20));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 699, 21));
+        menuBar->setGeometry(QRect(0, 0, 699, 20));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));
@@ -99,6 +104,7 @@ public:
         buttonReset->setText(QApplication::translate("MainWindow", "Reset", 0));
         buttonPauseResume->setText(QApplication::translate("MainWindow", "PauseResume", 0));
         setAngle->setText(QApplication::translate("MainWindow", "Set Angle", 0));
+        checkBoxTrainingMode->setText(QApplication::translate("MainWindow", "Training Mode", 0));
     } // retranslateUi
 
 };

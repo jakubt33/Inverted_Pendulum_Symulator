@@ -25,16 +25,14 @@ public:
     ~MainWindow();
 
 public slots:
-    void UpdateDisplay(void);
-    void Task8ms(void);
+    void PerformPendulum(void);
+    void Task10ms(void);
     void Task32ms(void);
 
 private slots:
     void on_buttonAddForce_clicked();
     void on_buttonPauseResume_clicked();
-
     void on_buttonReset_clicked();
-
     void on_setAngle_clicked();
 
 private:
@@ -45,8 +43,8 @@ private:
     std::unique_ptr<Pendulum> oPendulum;
     std::unique_ptr<FuzzyController> oFuzzyControllerAngle;
     std::unique_ptr<FuzzyController> oFuzzyControllerPosition;
-    QTimer *qTimerUpdateDisplay;
-    QTimer *qTimerTask8ms;
+    QTimer *qTimerPerformPendulum;
+    QTimer *qTimerTask10ms;
     QTimer *qTimerTask32ms;
 
     QGraphicsScene *scene;
@@ -58,7 +56,10 @@ private:
 
     Charts chartAngle;
     Charts chartPosition;
+    Charts chartNn;
     Charts chartPWM;
+
+    float angleShift;
 };
 
 #endif // MAINWINDOW_H

@@ -14,8 +14,6 @@
 #define dAxisXHorizon   ( 60/*[cm]*/ * dPxInCm )
 #define dAxisYHorizon   ( 20/*[cm]*/ * dPxInCm )
 
-#define dTimeInterval   ( 1/*[ms]*/ )
-
 /* Private, const defines */
 #define dCmInMeter          ( 100 )
 #define dCartCenterXOffset  ( dCartWidth / 2.0 )
@@ -56,14 +54,14 @@ MainWindow::MainWindow(QWidget *parent) :
                                mMeterToPx(oPendulum->GetMassAbsoluteXPosition()) - dBodyCenterXOffset,
                                mMeterToPx(oPendulum->GetMassAbsoluteYPosition()) - dBodyCenterYOffset);
 
+
     /* Init timer that periodically calls pendulum calculations function and updates display */
-    qTimerUpdateDisplay = new QTimer(this);
-    connect(qTimerUpdateDisplay, SIGNAL(timeout()), this, SLOT(UpdateDisplay() ));
-    oPendulum->SetTimeInterval(dTimeInterval);
+    qTimerPerformPendulum = new QTimer(this);
+    connect(qTimerPerformPendulum, SIGNAL(timeout()), this, SLOT(PerformPendulum() ));
 
     /* Task 8ms */
-    qTimerTask8ms = new QTimer(this);
-    connect(qTimerTask8ms, SIGNAL(timeout()), this, SLOT(Task8ms() ));
+    qTimerTask10ms = new QTimer(this);
+    connect(qTimerTask10ms, SIGNAL(timeout()), this, SLOT(Task10ms() ));
 
     /* Task 32ms */
     qTimerTask32ms = new QTimer(this);
@@ -73,13 +71,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartAngle.show();
     chartAngle.setWindowTitle("Angle");
-    chartAngle.setLabelName("Ang Pos", "Ang Vel x10");
+    chartAngle.setLabelName("Ang Pos","Ang Pos Dst", "Ang Vel x10");
     chartAngle.move(0,0);
     chartAngle.setRange(15.0f);
 
     chartPosition.show();
     chartPosition.setWindowTitle("Position");
-    chartPosition.setLabelName("Position [cm]", "Velocity[RPM]x5");
+    chartPosition.setLabelName("Position [cm]","Position dst", "Velocity[RPM]x5");
     chartPosition.move(0,400);
     chartPosition.setRange(20.0f);
 
@@ -90,7 +88,12 @@ MainWindow::MainWindow(QWidget *parent) :
     chartPWM.setHeight(500);
     chartPWM.setRange(800.0f);
 
-    this->UpdateDisplay();
+
+    chartNn.show();
+    chartNn.setWindowTitle("NN");
+    chartNn.setLabelName("Reward", "Iterator", "Q");
+    chartNn.move(700,0);
+    chartNn.setRange(1.5);
 
     oFuzzyControllerAngle = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::AngleRegulation)};
     oFuzzyControllerPosition = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::PositionRegulation)};
@@ -99,15 +102,14 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete qTimerUpdateDisplay;
-    delete qTimerTask8ms;
+    delete qTimerPerformPendulum;
+    delete qTimerTask10ms;
     delete qTimerTask32ms;
 }
 
-void MainWindow::UpdateDisplay(void)
+void MainWindow::PerformPendulum(void)
 {
     oPendulum->Perform();
-    this->RedrawPendulum();
 }
 
 void MainWindow::RedrawPendulum(void)
@@ -125,7 +127,7 @@ void MainWindow::RedrawPendulum(void)
 #define FUZZY_CONTROLLER 1
 #define PID_CONTROLLER   0
 
-void MainWindow::Task8ms(void)
+void MainWindow::Task10ms(void)
 {
     /*! Execute standing functionality */
     float PWM;
@@ -142,46 +144,65 @@ void MainWindow::Task8ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
+    static int8_t prescaler = 0;
+    static float iterator = 0.0;
+    prescaler++;
+
     /*  ================  neuro part  ====================  */
     float angularPosition = oPendulum->GetAngularPosition();
     float angularVelocity = oPendulum->GetAngularVelocity();
     float position = oPendulum->GetCartPosition()*100;
     float velocity = oPendulum->GetOmegaRPM();
 
-    /* Calculate mean squared error from last 1 second */
-    oNN.updateInputs(angularPosition, angularVelocity,
-                     position, velocity,
-                     position*position /*temp error*/ );
-    oNN.execute();
-    float angleShift = oNN.getOutput();
+    this->angleShift = oNN.getOutput();
+
+    if(prescaler % 5 == 0)
+    {
+        /* Now critic is fed with new data and output of RL NN can be gathered (it means
+         * that robot state parameters will be passed through the network to get the output) */
+        oNN.learn(angularPosition, angularVelocity,
+                  position, velocity);
+    }
 
     /*  ================  fuzzy part  ====================  */
     oFuzzyControllerPosition->updateInputs(position, velocity);
     oFuzzyControllerPosition->execute();
-    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput() + angleShift);
+    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput() + this->angleShift);
 
     oFuzzyControllerAngle->updateInputs(angularPosition,angularVelocity);
     oFuzzyControllerAngle->execute();
     PWM = oFuzzyControllerAngle->getOutput();
 #endif
 
-    //if(PWM<50) PWM = 0;
     oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
 
+    if(prescaler % 2 == 0)
+    {
 
-    /* Plot diagrams */
-    static float iterator = 0.0;
-    iterator += 0.008;
-    chartAngle.addData( oPendulum->GetAngularPosition(),
-                        oFuzzyControllerAngle->getDesiredPosition(),
-                        oPendulum->GetAngularVelocity()/10.0,
-                        iterator);
-    chartPosition.addData( oPendulum->GetCartPosition()*100.0,
-                           0,
-                           oPendulum->GetOmegaRPM()*5,
-                           iterator);
-    chartPWM.addData( PWM, iterator );
+        /*  ==============  diagrams part  ====================  */
+        RedrawPendulum();
+        iterator += 0.02;
+
+        chartAngle.addData( oPendulum->GetAngularPosition(),
+                            oFuzzyControllerAngle->getDesiredPosition(),
+                            oPendulum->GetAngularVelocity()/10.0,
+                            iterator);
+        chartPosition.addData( oPendulum->GetCartPosition()*100.0,
+                               0,
+                               oPendulum->GetOmegaRPM()*5,
+                               iterator);
+
+        chartNn.addData( oNN.getReward(),
+                         oNN.getIterator()/1000,
+                         oNN.getOutput(),
+                         iterator );
+
+        chartPWM.addData( PWM, iterator );
+    }
+
+    if(prescaler % 10 == 0) prescaler = 0;
 }
+
 #define AngleOffset pendulumAngleOffset
 void MainWindow::Task32ms(void)
 {
@@ -213,29 +234,28 @@ void MainWindow::on_buttonAddForce_clicked()
 
 void MainWindow::on_buttonPauseResume_clicked()
 {
-    if(qTimerUpdateDisplay->isActive())
+    if(qTimerPerformPendulum->isActive())
     {
-        qTimerTask8ms->stop();
-        qTimerTask32ms->stop();
-        qTimerUpdateDisplay->stop();
+        qTimerTask10ms->stop();
+        //qTimerTask32ms->stop();
+        qTimerPerformPendulum->stop();
     }else
     {
-        qTimerTask8ms->start(8);
-        qTimerTask32ms->start(32);
-        qTimerUpdateDisplay->start(dTimeInterval);
+        qTimerTask10ms->start(10);
+        //qTimerTask32ms->start(32);
+        qTimerPerformPendulum->start(dTimePerformPendulum);
     }
 }
 
 void MainWindow::on_buttonReset_clicked()
 {
-    qTimerTask8ms->stop();
+    qTimerTask10ms->stop();
     qTimerTask32ms->stop();
-    qTimerUpdateDisplay->stop();
+    qTimerPerformPendulum->stop();
     InitializeMotors();
 
     oPendulum->Initialize();
     RedrawPendulum();
-    oPendulum->SetTimeInterval(dTimeInterval);
 }
 
 void MainWindow::on_setAngle_clicked()

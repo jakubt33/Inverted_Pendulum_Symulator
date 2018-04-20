@@ -3589,6 +3589,7 @@ debug/mainwindow.o: ../Symulator/mainwindow.cpp ../Symulator/mainwindow.h \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QAction \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QApplication \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QButtonGroup \
+		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QCheckBox \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QGraphicsView \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QHeaderView \
 		C:/Qt/Qt5.7.0/5.7/mingw53_32/include/QtWidgets/QLineEdit \

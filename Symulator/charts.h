@@ -20,7 +20,7 @@ public:
     void addData( float newData1, float newData1Dot, float newData2, float timeDelta );
     void setHeight(int height);
     void setRange(float range);
-    void setLabelName(QString label1, QString label2);
+    void setLabelName(QString label1, QString label2, QString label3);
     void setLabelName(QString label1);
 
 private slots:

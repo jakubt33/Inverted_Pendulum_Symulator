@@ -158,7 +158,6 @@ typedef float fann_type;
 		
 	This function appears in FANN >= 2.0.0.
 */ 
-//struct fann *fann_create_standard(void);
 FANN_EXTERNAL struct fann *FANN_API fann_create_standard(unsigned int num_layers, ...);
 
 /* Function: fann_create_standard_array

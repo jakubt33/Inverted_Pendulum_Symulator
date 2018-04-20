@@ -29,6 +29,8 @@ public:
     QLCDNumber *customValue2;
     QLabel *label1;
     QLabel *label2;
+    QLabel *label3;
+    QLCDNumber *customValue3;
 
     void setupUi(QDialog *Charts)
     {
@@ -62,6 +64,14 @@ public:
         label2 = new QLabel(customPlot);
         label2->setObjectName(QStringLiteral("label2"));
         label2->setGeometry(QRect(110, 40, 91, 20));
+        label3 = new QLabel(customPlot);
+        label3->setObjectName(QStringLiteral("label3"));
+        label3->setGeometry(QRect(110, 60, 91, 20));
+        customValue3 = new QLCDNumber(customPlot);
+        customValue3->setObjectName(QStringLiteral("customValue3"));
+        customValue3->setGeometry(QRect(40, 60, 64, 23));
+        customValue3->setFont(font);
+        customValue3->setAutoFillBackground(true);
 
         retranslateUi(Charts);
 
@@ -73,6 +83,7 @@ public:
         Charts->setWindowTitle(QApplication::translate("Charts", "Dialog", 0));
         label1->setText(QApplication::translate("Charts", "TextLabel", 0));
         label2->setText(QApplication::translate("Charts", "TextLabel", 0));
+        label3->setText(QApplication::translate("Charts", "TextLabel", 0));
     } // retranslateUi
 
 };

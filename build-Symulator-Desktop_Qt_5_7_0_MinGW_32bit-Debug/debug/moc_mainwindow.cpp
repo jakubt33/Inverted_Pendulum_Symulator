@@ -20,7 +20,7 @@
 QT_BEGIN_MOC_NAMESPACE
 struct qt_meta_stringdata_MainWindow_t {
     QByteArrayData data[9];
-    char stringdata0[141];
+    char stringdata0[144];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -30,17 +30,17 @@ struct qt_meta_stringdata_MainWindow_t {
 static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_MainWindow = {
     {
 QT_MOC_LITERAL(0, 0, 10), // "MainWindow"
-QT_MOC_LITERAL(1, 11, 13), // "UpdateDisplay"
-QT_MOC_LITERAL(2, 25, 0), // ""
-QT_MOC_LITERAL(3, 26, 7), // "Task8ms"
-QT_MOC_LITERAL(4, 34, 8), // "Task32ms"
-QT_MOC_LITERAL(5, 43, 25), // "on_buttonAddForce_clicked"
-QT_MOC_LITERAL(6, 69, 28), // "on_buttonPauseResume_clicked"
-QT_MOC_LITERAL(7, 98, 22), // "on_buttonReset_clicked"
-QT_MOC_LITERAL(8, 121, 19) // "on_setAngle_clicked"
+QT_MOC_LITERAL(1, 11, 15), // "PerformPendulum"
+QT_MOC_LITERAL(2, 27, 0), // ""
+QT_MOC_LITERAL(3, 28, 8), // "Task10ms"
+QT_MOC_LITERAL(4, 37, 8), // "Task32ms"
+QT_MOC_LITERAL(5, 46, 25), // "on_buttonAddForce_clicked"
+QT_MOC_LITERAL(6, 72, 28), // "on_buttonPauseResume_clicked"
+QT_MOC_LITERAL(7, 101, 22), // "on_buttonReset_clicked"
+QT_MOC_LITERAL(8, 124, 19) // "on_setAngle_clicked"
 
     },
-    "MainWindow\0UpdateDisplay\0\0Task8ms\0"
+    "MainWindow\0PerformPendulum\0\0Task10ms\0"
     "Task32ms\0on_buttonAddForce_clicked\0"
     "on_buttonPauseResume_clicked\0"
     "on_buttonReset_clicked\0on_setAngle_clicked"
@@ -87,8 +87,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         MainWindow *_t = static_cast<MainWindow *>(_o);
         Q_UNUSED(_t)
         switch (_id) {
-        case 0: _t->UpdateDisplay(); break;
-        case 1: _t->Task8ms(); break;
+        case 0: _t->PerformPendulum(); break;
+        case 1: _t->Task10ms(); break;
         case 2: _t->Task32ms(); break;
         case 3: _t->on_buttonAddForce_clicked(); break;
         case 4: _t->on_buttonPauseResume_clicked(); break;

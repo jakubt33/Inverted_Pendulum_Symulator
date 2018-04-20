@@ -25,11 +25,11 @@ void Charts::makePlot()
     pen.setColor(QColor(0, 0, 255));
     ui->customPlot->addGraph(); // blue line, dotted
     ui->customPlot->graph(1)->setPen(pen);
-    ui->label1->setStyleSheet("QLabel { color : blue; }");
+    ui->label2->setStyleSheet("QLabel { color : blue; }");
 
     ui->customPlot->addGraph(); // green line
     ui->customPlot->graph(2)->setPen(QPen(QColor(0, 255, 0)));
-    ui->label2->setStyleSheet("QLabel { color : green; }");
+    ui->label3->setStyleSheet("QLabel { color : green; }");
 
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
@@ -50,7 +50,7 @@ void Charts::addData( float newData, float timeDelta )
     ui->customValue1->display(newData);
 
     ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
-    ui->customPlot->replot();
+    ui->customPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void Charts::addData( float newData1, float newData1Dot, float newData2, float timeDelta )
@@ -59,16 +59,18 @@ void Charts::addData( float newData1, float newData1Dot, float newData2, float t
     ui->customPlot->graph(1)->addData(timeDelta, newData1Dot);
     ui->customPlot->graph(2)->addData(timeDelta, newData2);
     ui->customValue1->display(newData1);
-    ui->customValue2->display(newData2);
+    ui->customValue2->display(newData1Dot);
+    ui->customValue3->display(newData2);
 
     ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
-    ui->customPlot->replot();
+    ui->customPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
-void Charts::setLabelName(QString label1, QString label2)
+void Charts::setLabelName(QString label1, QString label1Dot, QString label3)
 {
     ui->label1->setText(label1);
-    ui->label2->setText(label2);
+    ui->label2->setText(label1Dot);
+    ui->label3->setText(label3);
 }
 void Charts::setLabelName(QString label1)
 {

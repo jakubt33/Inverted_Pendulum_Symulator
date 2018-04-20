@@ -34,7 +34,7 @@ void Pendulum::Initialize(void)
     this->kPendulumData.angularVelocity = 0.0; // z2
     this->kPendulumData.cartPosition = 0.0; // z3
     this->kPendulumData.cartVelocity = 0.0; // z4
-    this->kPendulumData.timeStep = 0.05;
+    this->kPendulumData.timeStep = dTimePerformPendulum/1000; //todo: just to try
     this->kPendulumData.timeTag = 0.0;
 }
 
@@ -137,16 +137,6 @@ double Pendulum::GetMassAbsoluteXPosition(void)
 double Pendulum::GetMassAbsoluteYPosition(void)
 {
     return ( -kPendulumData.rodLength * cos(kPendulumData.angularPosition) );
-}
-
-/*!
- * \brief Pendulum::setTimeInterval
- * \param TimeStep  - sets time interval used in calculations [ms]
- */
-void Pendulum::SetTimeInterval( double TimeStep )
-{
-    //calculations are slowered 100 times
-    kPendulumData.timeStep = TimeStep/500;
 }
 
 /*!

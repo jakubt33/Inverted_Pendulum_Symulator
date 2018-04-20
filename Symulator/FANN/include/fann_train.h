@@ -84,7 +84,7 @@ struct fann_train_data
    	
    	This function appears in FANN >= 1.0.0.
  */ 
-FANN_EXTERNAL void FANN_API fann_train(struct fann *ann, fann_type * input,
+void fann_train(struct fann *ann, fann_type * input,
 									   fann_type * desired_output);
 
 #endif	/* NOT FIXEDFANN */

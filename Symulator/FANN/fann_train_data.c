@@ -760,7 +760,7 @@ int fann_save_train_internal_fd(struct fann_train_data *data, FILE * file, const
 /*
  * Creates an empty set of training data
  */
-FANN_EXTERNAL struct fann_train_data * FANN_API fann_create_train(unsigned int num_data, unsigned int num_input, unsigned int num_output)
+struct fann_train_data * fann_create_train(unsigned int num_data, unsigned int num_input, unsigned int num_output)
 {
 	fann_type *data_input, *data_output;
 	unsigned int i;

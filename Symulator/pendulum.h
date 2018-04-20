@@ -8,6 +8,9 @@
 #else
 #define pendulumAngleOffset 0.0f
 #endif
+
+#define dTimePerformPendulum   ( 1.0f /*[ms]*/ )
+
 typedef struct
 {
     double mass;
@@ -43,7 +46,6 @@ public:
     double GetAngularPosition(void);
     double GetAngularVelocity(void);
     double GetOmegaRPM(void);
-    void SetTimeInterval( double TimeStep );
     void SetForce( double dForce );
     double GetForce(void);
     void SetAngle(float newAngle);
