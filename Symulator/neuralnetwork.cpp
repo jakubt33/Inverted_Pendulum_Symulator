@@ -107,7 +107,7 @@ void NeuralNetwork::learn(float inputAngularPosition,
 #define dWIN_LOSE_TO_PUNISHMENT_RATIO   5.0f
 void NeuralNetwork::calculateReward()
 {
-    if (!losingConditionReached())
+    if (!isLosingConditionReached())
     {
         /* TODO: Probalby position punishment should have higher priority than
          *       angle punishement to prevent from situation when angle is
@@ -141,7 +141,7 @@ void NeuralNetwork::calculateReward()
         reward -= punishmentTotal;
 
         /* check if the net should not be awarded */
-        if (winningConditionReached())
+        if (isWinningConditionReached())
         {
             /* give a cookie for a good behaviour
              * TODO: this can be changed to a funtion instead of constant 1 value
@@ -162,7 +162,7 @@ void NeuralNetwork::calculateReward()
  * \brief NeuralNetwork::failConditionReached
  * \return bool - if true then a punishment must be applied as the net doesn't work properly!
  */
-bool NeuralNetwork::losingConditionReached()
+bool NeuralNetwork::isLosingConditionReached()
 {
     bool positionFail = fabsf(inputsCurrent[NN::dInputPosition]) > POSITION_MAX;
     bool angleFail = fabsf(inputsCurrent[NN::dInputAngularPosition]) > ANGLE_MAX;
@@ -172,22 +172,28 @@ bool NeuralNetwork::losingConditionReached()
 
 #define dNUMBER_OF_ITERATIONS_TO_WIN    40U
 #define dPOSITION_WINNING               1.0f
-#define dANGLE_WINNING                  1.0f
-bool NeuralNetwork::winningConditionReached()
+bool NeuralNetwork::isWinningConditionReached()
 {
     /* start looking for winning position after 40 iterations */
     if (uEpochCurrentIteration < 40) return false;
 
     /* if position and angle were in range for last X iterations then it is a winning state */
-    if (inputsCurrent[NN::dInputPosition] > dPOSITION_WINNING) epochWhenPositionEnteredWinningPosition = 0;
+    if (fabsf(positionDst - inputsCurrent[NN::dInputPosition]) > dPOSITION_WINNING) epochWhenPositionEnteredWinningPosition = 0;
     else epochWhenPositionEnteredWinningPosition++;
 
-    //todo: should be error not value!!
-    if (inputsCurrent[NN::dInputAngularPosition] > dANGLE_WINNING) epochWhenAngleEnteredWinningPosition = 0;
+#if 0 //todo: probably angle is not necessary to check winning conidition.
+    //todo: relative values should be taken into account (values fluctuations)
+    for( n = 0; n < numPoints; n++ )
+    {
+      varianceOfAngleFromLastXIterations += (Array[n] - mean) * (Array[n] - mean);
+    }
+    var /= numPoints;
+    if (fabsf(predictedQ-inputsCurrent[NN::dInputAngularPosition]) > dANGLE_WINNING) epochWhenAngleEnteredWinningPosition = 0;
     else epochWhenAngleEnteredWinningPosition++;
-
     if (  (epochWhenPositionEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN)
        && (epochWhenAngleEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN) )
+#endif
+    if (epochWhenPositionEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN)
     {
         return true;
     }
@@ -201,7 +207,7 @@ bool NeuralNetwork::isEpochTimeFinished()
 
 bool NeuralNetwork::isEpochFinished()
 {
-    return isEpochTimeFinished() || winningConditionReached() || losingConditionReached();
+    return isEpochTimeFinished() || isWinningConditionReached() || isLosingConditionReached();
 }
 
 void NeuralNetwork::initNewEpoch()
@@ -209,13 +215,12 @@ void NeuralNetwork::initNewEpoch()
     reward = 0.0f;
     uEpochCurrentIteration = 0;
     epochWhenPositionEnteredWinningPosition = 0;
-    epochWhenAngleEnteredWinningPosition = 0;
     epsilon = 1.0f; /*!< start with random searching of optimal movements */
     memset(inputsCurrent, 0, sizeof(inputsCurrent[0]) * NN::dInputNumOf);
     memset(inputsLast, 0, sizeof(inputsLast[0]) * NN::dInputNumOf);
     predictedQ = 0.0f;
     predictedQLast = 0.0f;
-
+    positionDst = 0.0f;
     uEpochCounter++;
 }
 

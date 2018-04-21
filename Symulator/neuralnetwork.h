@@ -35,6 +35,9 @@ public:
     float getReward();
     float getIterator();
     uint_fast32_t getEpochCounter();
+    bool isLosingConditionReached();
+    bool isWinningConditionReached();
+    bool isEpochTimeFinished();
 
 private:
     struct fann *oNn;
@@ -51,17 +54,13 @@ private:
     /* incremented after starting (initializing) new epoch */
     uint_fast32_t uEpochCounter;
 
-    /* used to check if position and angle are in winning position */
+    /* used to check if position is in the winning position */
     uint_fast32_t epochWhenPositionEnteredWinningPosition;
-    uint_fast32_t epochWhenAngleEnteredWinningPosition;
 
     float positionDst;
     float reward;
 
     void calculateReward();
-    bool losingConditionReached();
-    bool winningConditionReached();
-    bool isEpochTimeFinished();
 };
 
 #endif // NEURALNETWORK_H

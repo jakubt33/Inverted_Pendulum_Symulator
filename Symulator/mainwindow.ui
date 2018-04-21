@@ -147,6 +147,32 @@
      <number>3</number>
     </property>
    </widget>
+   <widget class="QLCDNumber" name="numberWins">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>20</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelWinsCounter">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>20</y>
+      <width>31</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Wins</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

@@ -42,6 +42,8 @@ public:
     QCheckBox *checkBoxTrainingMode;
     QLabel *labelTriesCounter;
     QLCDNumber *numberTries;
+    QLCDNumber *numberWins;
+    QLabel *labelWinsCounter;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -91,6 +93,13 @@ public:
         numberTries->setObjectName(QStringLiteral("numberTries"));
         numberTries->setGeometry(QRect(20, 20, 31, 23));
         numberTries->setDigitCount(3);
+        numberWins = new QLCDNumber(centralWidget);
+        numberWins->setObjectName(QStringLiteral("numberWins"));
+        numberWins->setGeometry(QRect(100, 20, 31, 23));
+        numberWins->setDigitCount(3);
+        labelWinsCounter = new QLabel(centralWidget);
+        labelWinsCounter->setObjectName(QStringLiteral("labelWinsCounter"));
+        labelWinsCounter->setGeometry(QRect(140, 20, 31, 20));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -117,6 +126,7 @@ public:
         setAngle->setText(QApplication::translate("MainWindow", "Set Angle", 0));
         checkBoxTrainingMode->setText(QApplication::translate("MainWindow", "Training Mode", 0));
         labelTriesCounter->setText(QApplication::translate("MainWindow", "Tries", 0));
+        labelWinsCounter->setText(QApplication::translate("MainWindow", "Wins", 0));
     } // retranslateUi
 
 };

@@ -153,11 +153,12 @@ void MainWindow::Task10ms(void)
 
     this->angleShift = oNN.getOutput();
 
-    ui->numberTries->display((int)oNN.getEpochCounter());
     if (prescaler % 5 == 0)
     {
         if (oNN.isEpochFinished())
         {
+            ui->numberTries->display((int)oNN.getEpochCounter());
+            ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
             oPendulum->Initialize();
             RedrawPendulum();
             oNN.initNewEpoch();
@@ -173,7 +174,7 @@ void MainWindow::Task10ms(void)
 
     /*  ================  fuzzy part  ====================  */
 #if NEURO_CONTROLLER
-    oFuzzyControllerAngle->setDesiredPosition(this->angleShift);
+    //oFuzzyControllerAngle->setDesiredPosition(this->angleShift);
 #else
     oFuzzyControllerPosition->updateInputs(position, velocity);
     oFuzzyControllerPosition->execute();
