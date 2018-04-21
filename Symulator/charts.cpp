@@ -49,7 +49,7 @@ void Charts::addData( float newData, float timeDelta )
     ui->customPlot->graph(0)->addData(timeDelta, newData);
     ui->customValue1->display(newData);
 
-    ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(timeDelta, 5, Qt::AlignRight);
     ui->customPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 
@@ -62,7 +62,7 @@ void Charts::addData( float newData1, float newData1Dot, float newData2, float t
     ui->customValue2->display(newData1Dot);
     ui->customValue3->display(newData2);
 
-    ui->customPlot->xAxis->setRange(timeDelta, 8, Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(timeDelta, 5, Qt::AlignRight);
     ui->customPlot->replot(QCustomPlot::rpQueuedReplot);
 }
 

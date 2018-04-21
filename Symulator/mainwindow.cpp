@@ -41,12 +41,12 @@ MainWindow::MainWindow(QWidget *parent) :
     yLine = scene->addLine(0, -dAxisYHorizon, 0, 0 + dAxisYHorizon/5);
 
     /* Draw center mass point of the body of pendulum */
-    centerMassPoint = scene->addEllipse( - dBodyCenterXOffset,
-                                         - dBodyCenterYOffset,
-                                        dBodyRadius, dBodyRadius );
+//    centerMassPoint = scene->addEllipse( - dBodyCenterXOffset,
+//                                         - dBodyCenterYOffset,
+//                                        dBodyRadius, dBodyRadius );
 
     /* Draw center mass point of the cart  */
-    cart = scene->addRect( mMeterToPx(oPendulum->GetCartPosition()) - dCartCenterXOffset, -dCartCenterYOffset, dCartWidth, dCartWidth);
+//    cart = scene->addRect( mMeterToPx(oPendulum->GetCartPosition()) - dCartCenterXOffset, -dCartCenterYOffset, dCartWidth, dCartWidth);
 
     /* Connect cart and body wiht a line */
     robotLine = scene->addLine(mMeterToPx(oPendulum->GetCartPosition()) - dCartCenterXOffset,
@@ -88,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     chartPWM.setHeight(500);
     chartPWM.setRange(800.0f);
 
-
     chartNn.show();
     chartNn.setWindowTitle("NN");
     chartNn.setLabelName("Reward", "Iterator", "Q");
@@ -114,17 +113,16 @@ void MainWindow::PerformPendulum(void)
 
 void MainWindow::RedrawPendulum(void)
 {
-    cart->setX( mMeterToPx( oPendulum->GetCartPosition() ) );
-    centerMassPoint->setX( mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ) );
-    centerMassPoint->setY( mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
+//    cart->setX( mMeterToPx( oPendulum->GetCartPosition() ) );
+//    centerMassPoint->setX( mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ) );
+//    centerMassPoint->setY( mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
 
     robotLine->setLine( mMeterToPx( oPendulum->GetCartPosition() ), 0,
                         mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
-
-    scene->setActivePanel(cart);
 }
 
 #define FUZZY_CONTROLLER 1
+#define NEURO_CONTROLLER 1
 #define PID_CONTROLLER   0
 
 void MainWindow::Task10ms(void)
@@ -145,7 +143,6 @@ void MainWindow::Task10ms(void)
 
 #elif FUZZY_CONTROLLER
     static int8_t prescaler = 0;
-    static float iterator = 0.0;
     prescaler++;
 
     /*  ================  neuro part  ====================  */
@@ -156,18 +153,32 @@ void MainWindow::Task10ms(void)
 
     this->angleShift = oNN.getOutput();
 
-    if(prescaler % 5 == 0)
+    ui->numberTries->display((int)oNN.getEpochCounter());
+    if (prescaler % 5 == 0)
     {
-        /* Now critic is fed with new data and output of RL NN can be gathered (it means
-         * that robot state parameters will be passed through the network to get the output) */
-        oNN.learn(angularPosition, angularVelocity,
-                  position, velocity);
+        if (oNN.isEpochFinished())
+        {
+            oPendulum->Initialize();
+            RedrawPendulum();
+            oNN.initNewEpoch();
+        }
+        else
+        {
+            /* Now critic is fed with new data and output of RL NN can be gathered (it means
+             * that robot state parameters will be passed through the network to get the output) */
+            oNN.learn(angularPosition, angularVelocity,
+                      position, velocity);
+        }
     }
 
     /*  ================  fuzzy part  ====================  */
+#if NEURO_CONTROLLER
+    oFuzzyControllerAngle->setDesiredPosition(this->angleShift);
+#else
     oFuzzyControllerPosition->updateInputs(position, velocity);
     oFuzzyControllerPosition->execute();
     oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput() + this->angleShift);
+#endif
 
     oFuzzyControllerAngle->updateInputs(angularPosition,angularVelocity);
     oFuzzyControllerAngle->execute();
@@ -181,6 +192,7 @@ void MainWindow::Task10ms(void)
 
         /*  ==============  diagrams part  ====================  */
         RedrawPendulum();
+        static float iterator = 0.0;
         iterator += 0.02;
 
         chartAngle.addData( oPendulum->GetAngularPosition(),
@@ -200,7 +212,7 @@ void MainWindow::Task10ms(void)
         chartPWM.addData( PWM, iterator );
     }
 
-    if(prescaler % 10 == 0) prescaler = 0;
+    if(prescaler == 10) prescaler = 0;
 }
 
 #define AngleOffset pendulumAngleOffset

@@ -3,6 +3,7 @@
 /*! ACHTUNG : check how it will work on STM!!!!!!!!!!!!!!! */
 #include <time.h>   //needed for rand() func
 #include <stdlib.h> //needed for rand() func
+#include "string.h" //memset
 
 #define POSITION_MAX            30.0f
 #define ANGLE_MAX               30.0f
@@ -11,10 +12,7 @@
 #define dNUM_LAYERS         3U
 #define dNUM_OUTPUTS        1U
 #define dNUM_NEURONS_HIDDEN 100U
-#define dDESIRED_ERROR      0.1f
 #define dTRAIN_MEMORY       dITERAION_NUMBER_MAX
-#define dERROR_NN_TRAINED   5.0f
-
 
 NeuralNetwork::NeuralNetwork()
 {
@@ -41,16 +39,9 @@ NeuralNetwork::NeuralNetwork()
     /* create training data */
     oTrainData = fann_create_train(dTRAIN_MEMORY, NN::dInputNumOf, dNUM_OUTPUTS);
 
-
-    errorTotalLast = NAN;
-
-    /* initialize default epoch duration */
-    uEpochDuration = dITERAION_NUMBER_MAX;
-    uEpochCurrentIteration = 0;
-    epochWhenPositionEnteredWinningPosition = 0;
-    epochWhenAngleEnteredWinningPosition = 0;
-    epsilon = 1.0f; /*!< start with random searching of optimal movements */
-
+    /* init new epoch by default */
+    uEpochCounter = 0;
+    initNewEpoch();
     srand(time(NULL));   // initialize rand()
 }
 
@@ -59,16 +50,6 @@ NeuralNetwork::~NeuralNetwork()
     fann_destroy(oNn);
     fann_destroy_train(oTrainData);
 }
-
-/*!
- * \brief setEpochTime
- * \param u32EpochDuration - epoch duration given in ms
- */
-void NeuralNetwork::setEpochTime(uint_fast32_t u32EpochDuration)
-{
-    this->uEpochDuration = u32EpochDuration;
-}
-
 
 void NeuralNetwork::learn(float inputAngularPosition,
                            float inputAngularVelocity,
@@ -119,85 +100,14 @@ void NeuralNetwork::learn(float inputAngularPosition,
     inputsLast[NN::dInputAngularVelocity] = inputsCurrent[NN::dInputAngularVelocity];
     inputsLast[NN::dInputPosition]        = inputsCurrent[NN::dInputPosition];
     inputsLast[NN::dInputVelocity]        = inputsCurrent[NN::dInputVelocity];
-
-#if 0
-    if (random.random() < epsilon) //choose random action
-        action = np.random.randint(0,4);
-    else //choose best action from Q(s,a) values
-        action = (np.argmax(qval));
-
-    /* Importance factor makes that the results at the end of the epoch are more important */
-    errorImportanceFactor = uEpochCurrentIteration/uEpochDuration;
-    /* Calculate total error since the beginning of the epoch */
-    errorTotalCurrent += errorImportanceFactor*calculateErrorValue();
-
-
-    /* store the data in a batch fann train file */
-    memcpy(oTrainData->input[uEpochCurrentIteration], inputs, NN::dInputNumOf * sizeof(float));
-    memcpy(oTrainData->output[uEpochCurrentIteration], &predictedQ, dNUM_OUTPUTS * sizeof(float));
-
-    /* if epoch ended, then update weights and start new epoch */
-    if ( uEpochCurrentIteration >= uEpochDuration )
-    {
-        /* checking if last total error is a number - otherwise it is a first
-         * loop and last error needs to be initialized */
-        if ( errorTotalLast != errorTotalLast )
-        {
-            /* initialize last total error and from now this line of code will never be reached */
-            errorTotalLast = errorTotalCurrent;
-
-            if ( !isNetworkTrained() )
-            {
-                /*todo: change OUTPUT randomly(), i.e it should be within a range from -5 to 5.
-                 * i need to select the value and the see if it was correct 
-                 */
-                
-            }
-        }
-        else /* it is not the first loop so all errors data are correct */
-        {
-            if ( !isNetworkTrained() )
-            /* here the learning algorithm is executed */
-            {
-                errorGradient = errorTotalLast - errorCurrent;
-                if ( errorGradient > 0.0f )       /* direction of changing weights is good */;
-                else if ( errorGradient <= 0.0f ) /* direction of changing weights is bad */;
-                
-                for (uint32_t outputIterator = 0; outputIterator < outputIterator; outputIterator++)
-                {
-                    /* add reward and take into consideration how far from being ideal the error is */
-                    oTrainData->output[outputIterator] += getReward()*getAdaptationSpeed();
-                }
-                if ( errorTotalCurrent < 20 ); //super
-                //fann_train_epoch(this->oNn, this->oTrainData); TODO: consider it
-
-                //train the data sets
-                fann_train_epoch(oNn, oTrainData);
-            }
-        }
-
-        /* Epoch has ended, it is time to start counting from the beginning */
-        this->uEpochCurrentIteration = 0;
-        this->errorTotalCurrent = 0;
-    }
-    return predictedQ;
-#endif
 }
-#if 0
-bool NeuralNetwork::isNetworkTrained()
-{
-    /* if error is less than treshhold then network is fully trained for current robot model */
-    //todo: check if epoch has ended
-    return errorTotalCurrent < dERROR_NN_TRAINED;
-}
-#endif
 
 #include "math.h"
 #define dTOTAL_POSSIBLE_PUNISHMENT      200.0f
 #define dWIN_LOSE_TO_PUNISHMENT_RATIO   5.0f
 void NeuralNetwork::calculateReward()
 {
-    if (!loosingConditionReached())
+    if (!losingConditionReached())
     {
         /* TODO: Probalby position punishment should have higher priority than
          *       angle punishement to prevent from situation when angle is
@@ -244,7 +154,7 @@ void NeuralNetwork::calculateReward()
     {
         /* punish with maximum possible value. It must be assured somewhere that
          * training has failed and new learning proccess should be started. */
-        reward -= 0.0f;
+        reward -= 1.0f;
     }
 }
 
@@ -252,10 +162,10 @@ void NeuralNetwork::calculateReward()
  * \brief NeuralNetwork::failConditionReached
  * \return bool - if true then a punishment must be applied as the net doesn't work properly!
  */
-bool NeuralNetwork::loosingConditionReached()
+bool NeuralNetwork::losingConditionReached()
 {
-    bool positionFail = (inputsCurrent[NN::dInputPosition] > POSITION_MAX) || (inputsCurrent[NN::dInputPosition] < -POSITION_MAX);
-    bool angleFail = (inputsCurrent[NN::dInputAngularPosition] > ANGLE_MAX) || (inputsCurrent[NN::dInputAngularPosition] < -ANGLE_MAX);
+    bool positionFail = fabsf(inputsCurrent[NN::dInputPosition]) > POSITION_MAX;
+    bool angleFail = fabsf(inputsCurrent[NN::dInputAngularPosition]) > ANGLE_MAX;
 
     return positionFail || angleFail;
 }
@@ -265,10 +175,14 @@ bool NeuralNetwork::loosingConditionReached()
 #define dANGLE_WINNING                  1.0f
 bool NeuralNetwork::winningConditionReached()
 {
+    /* start looking for winning position after 40 iterations */
+    if (uEpochCurrentIteration < 40) return false;
+
     /* if position and angle were in range for last X iterations then it is a winning state */
     if (inputsCurrent[NN::dInputPosition] > dPOSITION_WINNING) epochWhenPositionEnteredWinningPosition = 0;
     else epochWhenPositionEnteredWinningPosition++;
 
+    //todo: should be error not value!!
     if (inputsCurrent[NN::dInputAngularPosition] > dANGLE_WINNING) epochWhenAngleEnteredWinningPosition = 0;
     else epochWhenAngleEnteredWinningPosition++;
 
@@ -285,6 +199,26 @@ bool NeuralNetwork::isEpochTimeFinished()
     return uEpochCurrentIteration >= dITERAION_NUMBER_MAX;
 }
 
+bool NeuralNetwork::isEpochFinished()
+{
+    return isEpochTimeFinished() || winningConditionReached() || losingConditionReached();
+}
+
+void NeuralNetwork::initNewEpoch()
+{
+    reward = 0.0f;
+    uEpochCurrentIteration = 0;
+    epochWhenPositionEnteredWinningPosition = 0;
+    epochWhenAngleEnteredWinningPosition = 0;
+    epsilon = 1.0f; /*!< start with random searching of optimal movements */
+    memset(inputsCurrent, 0, sizeof(inputsCurrent[0]) * NN::dInputNumOf);
+    memset(inputsLast, 0, sizeof(inputsLast[0]) * NN::dInputNumOf);
+    predictedQ = 0.0f;
+    predictedQLast = 0.0f;
+
+    uEpochCounter++;
+}
+
 float NeuralNetwork::getReward()
 {
     return reward;
@@ -295,43 +229,9 @@ float NeuralNetwork::getIterator()
     return uEpochCurrentIteration;
 }
 
-
-float NeuralNetwork::getAdaptationSpeed()
+uint_fast32_t NeuralNetwork::getEpochCounter()
 {
-    float adaptationSpeed = 0.25*errorTotalCurrent;
-
-    /* saturate adaptation speed */
-    if (adaptationSpeed > 1.0) adaptationSpeed = 1.0;
-    else if (adaptationSpeed < -1.0) adaptationSpeed = -1.0;
-
-    return  adaptationSpeed;
-}
-
-/*!
- * \brief NeuralNetwork::calculateErrorValue. Example of function that calculates error
- * \return Current error based on given inputs.
- */
-float NeuralNetwork::calculateErrorValue()
-{
-    return 0.125*this->inputsCurrent[NN::dInputPosition]*this->inputsCurrent[NN::dInputPosition];
-}
-
-float NeuralNetwork::train(float inputError)
-{
-#if 0
-    /* apply inputs to ann and get the result */
-    this->output = inputError + getOutput(inputAngularPosition, inputAngularVelocity,
-                                          inputPosition, inputVelocity);
-
-    /* this way, error will be generated only by 'error' - and I can
-     * pass there the result of my own cost function! */
-    fann_compute_MSE(oNn, &this->output);
-
-    fann_backpropagate_MSE(oNn);
-    fann_update_weights(oNn);
-    return this->output;
-#endif
-    return 0.0f;
+    return uEpochCounter;
 }
 
 /*!

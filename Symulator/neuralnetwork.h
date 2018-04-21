@@ -23,22 +23,18 @@ public:
     NeuralNetwork();
     ~NeuralNetwork();
 
-    /*!
-     * \brief   Updates inputs. State of object must be passed as a parameter
-     * \param   u32TimeDelta - time in ms since last parameters update
-     */
     void learn(float inputAngularPosition,
                float inputAngularVelocity,
                float inputPosition,
                float inputVelocity);
 
-
-    bool stopConditionReached();
-    void setEpochTime(uint_fast32_t uEpochDuration);
+    bool isEpochFinished();
+    void initNewEpoch();
 
     float getOutput();
     float getReward();
     float getIterator();
+    uint_fast32_t getEpochCounter();
 
 private:
     struct fann *oNn;
@@ -52,7 +48,8 @@ private:
 
     /* incremented at each learning iteration (after every inputs update)*/
     uint_fast32_t uEpochCurrentIteration;
-    uint_fast32_t uEpochDuration;
+    /* incremented after starting (initializing) new epoch */
+    uint_fast32_t uEpochCounter;
 
     /* used to check if position and angle are in winning position */
     uint_fast32_t epochWhenPositionEnteredWinningPosition;
@@ -60,23 +57,11 @@ private:
 
     float positionDst;
     float reward;
+
     void calculateReward();
-    bool loosingConditionReached();
+    bool losingConditionReached();
     bool winningConditionReached();
     bool isEpochTimeFinished();
-
-
-
-    float calculateErrorValue();
-    float getAdaptationSpeed();
-
-    float errorTotalLast;
-    float errorGradient;
-    float errorTotalCurrent;
-    float errorImportanceFactor;
-
-public:
-    float train(float inputError);
 };
 
 #endif // NEURALNETWORK_H

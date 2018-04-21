@@ -54,7 +54,7 @@
      <rect>
       <x>10</x>
       <y>170</y>
-      <width>75</width>
+      <width>51</width>
       <height>23</height>
      </rect>
     </property>
@@ -65,7 +65,7 @@
    <widget class="QPushButton" name="buttonPauseResume">
     <property name="geometry">
      <rect>
-      <x>90</x>
+      <x>70</x>
       <y>170</y>
       <width>75</width>
       <height>23</height>
@@ -119,6 +119,32 @@
     </property>
     <property name="text">
      <string>Training Mode</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelTriesCounter">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>20</y>
+      <width>31</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Tries</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="numberTries">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="digitCount">
+     <number>3</number>
     </property>
    </widget>
   </widget>

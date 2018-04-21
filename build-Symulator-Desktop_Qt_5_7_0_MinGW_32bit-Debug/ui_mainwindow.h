@@ -16,6 +16,8 @@
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLCDNumber>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
@@ -38,6 +40,8 @@ public:
     QLineEdit *editAngle;
     QLineEdit *editForce;
     QCheckBox *checkBoxTrainingMode;
+    QLabel *labelTriesCounter;
+    QLCDNumber *numberTries;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -64,10 +68,10 @@ public:
         buttonAddForce->setGeometry(QRect(460, 170, 75, 23));
         buttonReset = new QPushButton(centralWidget);
         buttonReset->setObjectName(QStringLiteral("buttonReset"));
-        buttonReset->setGeometry(QRect(10, 170, 75, 23));
+        buttonReset->setGeometry(QRect(10, 170, 51, 23));
         buttonPauseResume = new QPushButton(centralWidget);
         buttonPauseResume->setObjectName(QStringLiteral("buttonPauseResume"));
-        buttonPauseResume->setGeometry(QRect(90, 170, 75, 23));
+        buttonPauseResume->setGeometry(QRect(70, 170, 75, 23));
         setAngle = new QPushButton(centralWidget);
         setAngle->setObjectName(QStringLiteral("setAngle"));
         setAngle->setGeometry(QRect(580, 170, 75, 23));
@@ -80,6 +84,13 @@ public:
         checkBoxTrainingMode = new QCheckBox(centralWidget);
         checkBoxTrainingMode->setObjectName(QStringLiteral("checkBoxTrainingMode"));
         checkBoxTrainingMode->setGeometry(QRect(360, 172, 91, 20));
+        labelTriesCounter = new QLabel(centralWidget);
+        labelTriesCounter->setObjectName(QStringLiteral("labelTriesCounter"));
+        labelTriesCounter->setGeometry(QRect(60, 20, 31, 20));
+        numberTries = new QLCDNumber(centralWidget);
+        numberTries->setObjectName(QStringLiteral("numberTries"));
+        numberTries->setGeometry(QRect(20, 20, 31, 23));
+        numberTries->setDigitCount(3);
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -105,6 +116,7 @@ public:
         buttonPauseResume->setText(QApplication::translate("MainWindow", "PauseResume", 0));
         setAngle->setText(QApplication::translate("MainWindow", "Set Angle", 0));
         checkBoxTrainingMode->setText(QApplication::translate("MainWindow", "Training Mode", 0));
+        labelTriesCounter->setText(QApplication::translate("MainWindow", "Tries", 0));
     } // retranslateUi
 
 };
