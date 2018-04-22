@@ -6,7 +6,7 @@
 
 namespace NN {
 
-#define dEXPERIENCE_REPLAY_BATCH_SIZE   50U
+#define dEXPERIENCE_REPLAY_BATCH_SIZE   150U
 
 typedef enum {
     dInputAngularPosition,

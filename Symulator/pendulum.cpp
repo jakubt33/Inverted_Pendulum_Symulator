@@ -34,7 +34,7 @@ void Pendulum::Initialize(void)
     this->kPendulumData.angularVelocity = 0.0; // z2
     this->kPendulumData.cartPosition = 0.0; // z3
     this->kPendulumData.cartVelocity = 0.0; // z4
-    this->kPendulumData.timeStep = dTimePerformPendulum/1000; //todo: just to try
+    this->kPendulumData.timeStep = dTimePerformPendulum/2000; //todo: just to try
     this->kPendulumData.timeTag = 0.0;
 }
 

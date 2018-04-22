@@ -9,15 +9,21 @@
 #define ANGLE_MAX               30.0f
 #define dITERAION_NUMBER_MAX    200U
 
-#define dNUM_LAYERS         3U
-#define dNUM_NEURONS_HIDDEN 100U
-#define dGAMMA              0.99f
-#define dMINI_BATCH_SIZE    30U
+#define dNUM_LAYERS             4U
+#define dNUM_NEURONS_HIDDEN1    30U
+#define dNUM_NEURONS_HIDDEN2    20U
+#define dGAMMA                  0.99f
+
+#define dMINI_BATCH_SIZE        40U
 
 NeuralNetwork::NeuralNetwork()
 {
     /* 4 inputs, 100 hidden neurons, 3 output */
-    oNn = fann_create_standard(dNUM_LAYERS, NN::dInputNumOf, dNUM_NEURONS_HIDDEN, NN::dActionNumOf);
+    oNn = fann_create_standard(dNUM_LAYERS,
+                               NN::dInputNumOf,
+                               dNUM_NEURONS_HIDDEN1,
+                               dNUM_NEURONS_HIDDEN2,
+                               NN::dActionNumOf);
 
     /* stepwise is more then two times faster
        use symmetric to deal with -1.0 and 1.0 (or normal for 0.0 to 1.0) */
@@ -125,11 +131,13 @@ void NeuralNetwork::learn(float inputAngularPosition,
             /* if it is not a terminal state then set the old values as train data (output) - use new max in equation */
             if (!isEpochFinished())
             {
-                *predictedQOld = experienceReplay[randomExperienceIndex].reward + (dGAMMA * maxQ);
+                *(predictedQOld + experienceReplay[randomExperienceIndex].action)
+                        = experienceReplay[randomExperienceIndex].reward + (dGAMMA * maxQ);
             }
             else
             {
-                *predictedQOld = experienceReplay[randomExperienceIndex].reward;
+                *(predictedQOld + experienceReplay[randomExperienceIndex].action)
+                        = experienceReplay[randomExperienceIndex].reward;
             }
 
             /* store the adjusted data in mini batch fann train file */
@@ -138,81 +146,11 @@ void NeuralNetwork::learn(float inputAngularPosition,
         }
 
         /* train the data sets */
-        fann_train_on_data(oNn, oTrainData, dMINI_BATCH_SIZE, dMINI_BATCH_SIZE, 0.001);
+        fann_train_on_data(oNn, oTrainData, dMINI_BATCH_SIZE, 0, 0.001);
     }
-
-
-#if 0
-    //check if batch mem is filled the first time
-    if(batch_pos >= MAX_BATCH_MEM)
-    {
-        //if the list is filled once a time completely
-        //we start to set new data at random positions
-        //save outputs and inputs
-        int batch_rand_pos = rand() % MAX_BATCH_MEM;
-        memcpy(batch_mem[batch_rand_pos].inputs, old_in_p, NUM_INPUTS * sizeof(fann_type));
-        memcpy(batch_mem[batch_rand_pos].inputs_tp1, new_in_p, NUM_INPUTS * sizeof(fann_type));
-        memcpy(batch_mem[batch_rand_pos].reward, reward, NUM_SERVO_MOT * sizeof(fann_type));
-        memcpy(batch_mem[batch_rand_pos].servo_actions, actions, NUM_SERVO_MOT * sizeof(uint8_t));
-
-        /////////////////// experience reply //////////////////////
-        //sample a random set of MAX_BATCH_MEM to MIN_BATCH_MEM
-        for(int y = 0; y < MINI_BATCH_MEM; y++)
-        {
-            int mini_pos = rand() % MAX_BATCH_MEM;
-
-            //run the old copy of the ann with new inputs
-            //fann_type *newQ = fann_run(ann_cpy, batch_mem[mini_pos].inputs_tp1);
-            fann_type *newQ = fann_run(ann, batch_mem[mini_pos].inputs_tp1);
-
-            //search the maximum in newQ
-            fann_type maxQ[NUM_SERVO_MOT];
-            for(int x = 0; x < NUM_SERVO_MOT; x++)
-            {
-                ann_getMaxQandAction(x, newQ, &maxQ[x]);
-            }
-
-            fann_type *oldQ = fann_run(ann, batch_mem[mini_pos].inputs);
-
-            //set the old values as train data (output) - use new max in equation
-            for(int x = 0; x < NUM_SERVO_MOT; x++)
-            {
-                oldQ[batch_mem[mini_pos].servo_actions[x] * NUM_SERVO_MOT + x] = (batch_mem[mini_pos].reward[x] < 0.1) ? \
-                        (batch_mem[mini_pos].reward[x] + (gamma * maxQ[x])) : batch_mem[mini_pos].reward[x];
-            }
-
-            //store the data in mini batch fann train file
-            memcpy(train_data->input[y], batch_mem[mini_pos].inputs, NUM_INPUTS * sizeof(fann_type));
-            memcpy(train_data->output[y], oldQ, NUM_OUTPUTS * sizeof(fann_type));
-        }
-
-        //train the data sets
-        fann_train_on_data(ann, train_data, NUM_TRAIN_EPOCHS, NUM_TRAIN_EPOCHS, 0.001);
-
-        /////////////////// experience reply end //////////////////////
-    }
-    else
-    {
-        //save outputs and inputs
-        //memcpy(batch_mem[batch_pos].inputs, old_in_p, NUM_INPUTS * sizeof(fann_type));
-        //memcpy(batch_mem[batch_pos].inputs_tp1, new_in_p, NUM_INPUTS * sizeof(fann_type));
-        //memcpy(batch_mem[batch_pos].reward, reward, NUM_SERVO_MOT * sizeof(fann_type));
-        //memcpy(batch_mem[batch_pos].servo_actions, actions, NUM_SERVO_MOT * sizeof(uint8_t));
-
-        //this function use always backpropagation algorithm!
-        //fann_set_training_algorithm has no effect!
-        //or same as fann_set_training_algorithm = incremental and train epoch
-        //train ann   , input, desired outputs
-        //train only single data -> catastrophic forgetting could happen in the first MAX_BATCH_MEM moves
-        //fann_train(ann, old_in_p, qval);
-        fann_train(oNn, inputsLast, &inputsCurrent[NN::dInputAngularPosition]);//todo: it might be wrong
-        //batch_pos++;
-    }
-#endif
-
 
     /* Decrease epsilon to base more on learned values */
-    if(epsilon > 0.1)
+    if(epsilon > 0.05)
         epsilon -= (1.0f / uEpochCurrentIteration);
 
     /* from now on the current prediction of Q becomes obsolete */
@@ -312,7 +250,7 @@ void NeuralNetwork::calculateReward()
              * TODO: this can be changed to a funtion instead of constant 1 value
              *       to award more better states
              */
-            reward += 1.0f;
+            reward += 2.0f;
         }
     }
     else

@@ -56,12 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     /* Init timer that periodically calls pendulum calculations function and updates display */
-    qTimerPerformPendulum = new QTimer(this);
-    connect(qTimerPerformPendulum, SIGNAL(timeout()), this, SLOT(PerformPendulum() ));
-
-    /* Task 8ms */
-    qTimerTask10ms = new QTimer(this);
-    connect(qTimerTask10ms, SIGNAL(timeout()), this, SLOT(Task10ms() ));
+    /* Task 1ms */
+    qTimerTask1ms = new QTimer(this);
+    connect(qTimerTask1ms, SIGNAL(timeout()), this, SLOT(Task1ms() ));
 
     /* Task 32ms */
     qTimerTask32ms = new QTimer(this);
@@ -101,14 +98,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete qTimerPerformPendulum;
-    delete qTimerTask10ms;
+    delete qTimerTask1ms;
     delete qTimerTask32ms;
-}
-
-void MainWindow::PerformPendulum(void)
-{
-    oPendulum->Perform();
 }
 
 void MainWindow::RedrawPendulum(void)
@@ -125,10 +116,18 @@ void MainWindow::RedrawPendulum(void)
 #define NEURO_CONTROLLER 1
 #define PID_CONTROLLER   0
 
-void MainWindow::Task10ms(void)
+void MainWindow::Task1ms(void)
 {
+    static int8_t prescaler = 0;
+    prescaler++;
+
+    oPendulum->Perform();
+
     /*! Execute standing functionality */
     float PWM;
+    /* ====================== 50ms task ==================== */
+    if (prescaler % 50 == 0)
+    {
 #if PID_CONTROLLER
     /*! Apply PID filter to motors to get required angle (output of omega regulator) */
     oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum->GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
@@ -142,27 +141,19 @@ void MainWindow::Task10ms(void)
     ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
 
 #elif FUZZY_CONTROLLER
-    static int8_t prescaler = 0;
-    prescaler++;
 
-    /*  ================  neuro part  ====================  */
-    float angularPosition = oPendulum->GetAngularPosition();
-    float angularVelocity = oPendulum->GetAngularVelocity();
-    float position = oPendulum->GetCartPosition()*100;
-    float velocity = oPendulum->GetOmegaRPM();
-
-    if (prescaler % 5 == 0)
-    {
+#if NEURO_CONTROLLER
+        /*  ================  neuro part  ====================  */
         if (oNN.isEpochFinished())
         {
             oPendulum->Initialize();
             /* update the list - it does not consume computing power */
             ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward()));
+            ui->numberTries->display((int)oNN.getEpochCounter());
+            ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
 
             if (bEnabledDisplay)
             {
-                ui->numberTries->display((int)oNN.getEpochCounter());
-                ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
                 RedrawPendulum();
             }
 
@@ -172,28 +163,34 @@ void MainWindow::Task10ms(void)
         {
             /* Now critic is fed with new data and output of RL NN can be gathered (it means
              * that robot state parameters will be passed through the network to get the output) */
-            oNN.learn(angularPosition, angularVelocity,
-                      position, velocity);
+            oNN.learn(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity(),
+                      oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
         }
+#endif
     }
 
-    /*  ================  fuzzy part  ====================  */
+    /* ====================== 10ms task ==================== */
+    if (prescaler % 10 == 0)
+    {
+        /*  ================  fuzzy part  ====================  */
 #if NEURO_CONTROLLER
-    oFuzzyControllerAngle->setDesiredPosition(oNN.getAngleShift());
+        oFuzzyControllerAngle->setDesiredPosition(oNN.getAngleShift());
 #else
-    oFuzzyControllerPosition->updateInputs(position, velocity);
-    oFuzzyControllerPosition->execute();
-    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
+        oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
+        oFuzzyControllerPosition->execute();
+        oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
 #endif
 
-    oFuzzyControllerAngle->updateInputs(angularPosition,angularVelocity);
-    oFuzzyControllerAngle->execute();
-    PWM = oFuzzyControllerAngle->getOutput();
+        oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity());
+        oFuzzyControllerAngle->execute();
+        PWM = oFuzzyControllerAngle->getOutput();
 #endif
 
-    oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+        oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+    }
 
-    if(prescaler % 2 == 0)
+    /* ====================== 20ms task ==================== */
+    if (prescaler % 25 == 0)
     {
         if (bEnabledDisplay)
         {
@@ -220,7 +217,7 @@ void MainWindow::Task10ms(void)
         }
     }
 
-    if(prescaler == 10) prescaler = 0;
+    if (prescaler == 100) prescaler = 0;
 }
 
 #define AngleOffset pendulumAngleOffset
@@ -254,24 +251,22 @@ void MainWindow::on_buttonAddForce_clicked()
 
 void MainWindow::on_buttonPauseResume_clicked()
 {
-    if(qTimerPerformPendulum->isActive())
+    if (qTimerTask1ms->isActive())
     {
-        qTimerTask10ms->stop();
+        qTimerTask1ms->stop();
         //qTimerTask32ms->stop();
-        qTimerPerformPendulum->stop();
-    }else
+    }
+    else
     {
-        qTimerTask10ms->start(10);
+        qTimerTask1ms->start(1);
         //qTimerTask32ms->start(32);
-        qTimerPerformPendulum->start(dTimePerformPendulum);
     }
 }
 
 void MainWindow::on_buttonReset_clicked()
 {
-    qTimerTask10ms->stop();
+    qTimerTask1ms->stop();
     qTimerTask32ms->stop();
-    qTimerPerformPendulum->stop();
     InitializeMotors();
 
     oPendulum->Initialize();
@@ -281,7 +276,7 @@ void MainWindow::on_buttonReset_clicked()
 void MainWindow::on_setAngle_clicked()
 {
     float newAngle = ui->editAngle->text().toFloat();
-    if(newAngle == newAngle)
+    if (newAngle == newAngle)
     {
         oPendulum->SetAngle(newAngle);
     }
@@ -291,29 +286,19 @@ void MainWindow::on_setAngle_clicked()
 
 void MainWindow::on_checkBoxTrainingMode_clicked(bool checked)
 {
-    ui->checkBoxTrainingMode->update();
+    ui->checkBoxTrainingMode->show();
 
     if (checked)
     {
-        bEnabledDisplay = false;
-        int msCounter = 0;
+        qTimerTask1ms->stop();
+
+        //bEnabledDisplay = false;
         int startNumberOfEpoch = oNN.getEpochCounter();
-        /* simulate 100 epoch */
-        while (oNN.getEpochCounter() < startNumberOfEpoch + 100)
+        /* simulate 10 epoch */
+        while (oNN.getEpochCounter() < startNumberOfEpoch + 10)
         {
-            msCounter++;
-
             // simulate 1ms task:
-            if(msCounter%1 == 0)
-            {
-                PerformPendulum();
-            }
-
-            //simulate 10ms task:
-            if(msCounter%10 == 0)
-            {
-                Task10ms();
-            }
+            Task1ms();
         }
         bEnabledDisplay = true;
 

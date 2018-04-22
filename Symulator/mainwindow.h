@@ -25,8 +25,7 @@ public:
     ~MainWindow();
 
 public slots:
-    void PerformPendulum(void);
-    void Task10ms(void);
+    void Task1ms(void);
     void Task32ms(void);
 
 private slots:
@@ -34,7 +33,6 @@ private slots:
     void on_buttonPauseResume_clicked();
     void on_buttonReset_clicked();
     void on_setAngle_clicked();
-
     void on_checkBoxTrainingMode_clicked(bool checked);
 
 private:
@@ -45,8 +43,7 @@ private:
     std::unique_ptr<Pendulum> oPendulum;
     std::unique_ptr<FuzzyController> oFuzzyControllerAngle;
     std::unique_ptr<FuzzyController> oFuzzyControllerPosition;
-    QTimer *qTimerPerformPendulum;
-    QTimer *qTimerTask10ms;
+    QTimer *qTimerTask1ms;
     QTimer *qTimerTask32ms;
 
     QGraphicsScene *scene;
