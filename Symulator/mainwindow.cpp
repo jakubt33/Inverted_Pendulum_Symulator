@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
     chartNn.setWindowTitle("NN");
     chartNn.setLabelName("Reward", "Iterator", "Q");
     chartNn.move(700,0);
-    chartNn.setRange(1.5);
+    chartNn.setRange(5.5);
 
     oFuzzyControllerAngle = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::AngleRegulation)};
     oFuzzyControllerPosition = std::unique_ptr<FuzzyController>{ new FuzzyController(FUZZY_CONTROLLER::PositionRegulation)};
@@ -151,16 +151,21 @@ void MainWindow::Task10ms(void)
     float position = oPendulum->GetCartPosition()*100;
     float velocity = oPendulum->GetOmegaRPM();
 
-    this->angleShift = oNN.getOutput();
-
     if (prescaler % 5 == 0)
     {
         if (oNN.isEpochFinished())
         {
-            ui->numberTries->display((int)oNN.getEpochCounter());
-            ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
             oPendulum->Initialize();
-            RedrawPendulum();
+            /* update the list - it does not consume computing power */
+            ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward()));
+
+            if (bEnabledDisplay)
+            {
+                ui->numberTries->display((int)oNN.getEpochCounter());
+                ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
+                RedrawPendulum();
+            }
+
             oNN.initNewEpoch();
         }
         else
@@ -174,11 +179,11 @@ void MainWindow::Task10ms(void)
 
     /*  ================  fuzzy part  ====================  */
 #if NEURO_CONTROLLER
-    //oFuzzyControllerAngle->setDesiredPosition(this->angleShift);
+    oFuzzyControllerAngle->setDesiredPosition(oNN.getAngleShift());
 #else
     oFuzzyControllerPosition->updateInputs(position, velocity);
     oFuzzyControllerPosition->execute();
-    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput() + this->angleShift);
+    oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
 #endif
 
     oFuzzyControllerAngle->updateInputs(angularPosition,angularVelocity);
@@ -190,27 +195,29 @@ void MainWindow::Task10ms(void)
 
     if(prescaler % 2 == 0)
     {
+        if (bEnabledDisplay)
+        {
+            /*  ==============  diagrams part  ====================  */
+            RedrawPendulum();
+            static float iterator = 0.0;
+            iterator += 0.02;
 
-        /*  ==============  diagrams part  ====================  */
-        RedrawPendulum();
-        static float iterator = 0.0;
-        iterator += 0.02;
+            chartAngle.addData( oPendulum->GetAngularPosition(),
+                                oFuzzyControllerAngle->getDesiredPosition(),
+                                oPendulum->GetAngularVelocity()/10.0,
+                                iterator);
+            chartPosition.addData( oPendulum->GetCartPosition()*100.0,
+                                   0,
+                                   oPendulum->GetOmegaRPM()*5,
+                                   iterator);
 
-        chartAngle.addData( oPendulum->GetAngularPosition(),
-                            oFuzzyControllerAngle->getDesiredPosition(),
-                            oPendulum->GetAngularVelocity()/10.0,
-                            iterator);
-        chartPosition.addData( oPendulum->GetCartPosition()*100.0,
-                               0,
-                               oPendulum->GetOmegaRPM()*5,
-                               iterator);
+            chartNn.addData( oNN.getReward(),
+                             oNN.getIterator()/1000,
+                             oNN.getAngleShift(),
+                             iterator );
 
-        chartNn.addData( oNN.getReward(),
-                         oNN.getIterator()/1000,
-                         oNN.getOutput(),
-                         iterator );
-
-        chartPWM.addData( PWM, iterator );
+            chartPWM.addData( PWM, iterator );
+        }
     }
 
     if(prescaler == 10) prescaler = 0;
@@ -279,4 +286,37 @@ void MainWindow::on_setAngle_clicked()
         oPendulum->SetAngle(newAngle);
     }
     RedrawPendulum();
+
+}
+
+void MainWindow::on_checkBoxTrainingMode_clicked(bool checked)
+{
+    ui->checkBoxTrainingMode->update();
+
+    if (checked)
+    {
+        bEnabledDisplay = false;
+        int msCounter = 0;
+        int startNumberOfEpoch = oNN.getEpochCounter();
+        /* simulate 100 epoch */
+        while (oNN.getEpochCounter() < startNumberOfEpoch + 100)
+        {
+            msCounter++;
+
+            // simulate 1ms task:
+            if(msCounter%1 == 0)
+            {
+                PerformPendulum();
+            }
+
+            //simulate 10ms task:
+            if(msCounter%10 == 0)
+            {
+                Task10ms();
+            }
+        }
+        bEnabledDisplay = true;
+
+        ui->checkBoxTrainingMode->setChecked(false);
+    }
 }

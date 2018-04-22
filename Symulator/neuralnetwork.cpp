@@ -10,14 +10,14 @@
 #define dITERAION_NUMBER_MAX    200U
 
 #define dNUM_LAYERS         3U
-#define dNUM_OUTPUTS        1U
 #define dNUM_NEURONS_HIDDEN 100U
-#define dTRAIN_MEMORY       dITERAION_NUMBER_MAX
+#define dGAMMA              0.99f
+#define dMINI_BATCH_SIZE    30U
 
 NeuralNetwork::NeuralNetwork()
 {
-    /* 4 inputs, 100 hidden neurons, 1 output */
-    oNn = fann_create_standard(dNUM_LAYERS, NN::dInputNumOf, dNUM_NEURONS_HIDDEN, dNUM_OUTPUTS);
+    /* 4 inputs, 100 hidden neurons, 3 output */
+    oNn = fann_create_standard(dNUM_LAYERS, NN::dInputNumOf, dNUM_NEURONS_HIDDEN, NN::dActionNumOf);
 
     /* stepwise is more then two times faster
        use symmetric to deal with -1.0 and 1.0 (or normal for 0.0 to 1.0) */
@@ -37,10 +37,12 @@ NeuralNetwork::NeuralNetwork()
     fann_randomize_weights(oNn, -0.01f, 0.01f);
 
     /* create training data */
-    oTrainData = fann_create_train(dTRAIN_MEMORY, NN::dInputNumOf, dNUM_OUTPUTS);
+    oTrainData = fann_create_train(dMINI_BATCH_SIZE, NN::dInputNumOf, NN::dActionNumOf);
 
     /* init new epoch by default */
     uEpochCounter = 0;
+    experienceReplayIndex = 0;
+    bIsExperienceReplayFull = false;
     initNewEpoch();
     srand(time(NULL));   // initialize rand()
 }
@@ -52,9 +54,9 @@ NeuralNetwork::~NeuralNetwork()
 }
 
 void NeuralNetwork::learn(float inputAngularPosition,
-                           float inputAngularVelocity,
-                           float inputPosition,
-                           float inputVelocity)
+                          float inputAngularVelocity,
+                          float inputPosition,
+                          float inputVelocity)
 {
     /* inputs that are achieved by using predicted Q in last iteration */
     inputsCurrent[NN::dInputAngularPosition] = inputAngularPosition;
@@ -63,48 +65,211 @@ void NeuralNetwork::learn(float inputAngularPosition,
     inputsCurrent[NN::dInputVelocity] = inputVelocity;
 
     /* We are in state S_n. Let's run the network and see if returned Q will be predicted correctly */
-    predictedQ = *fann_run(oNn, inputsCurrent);
-
-    /* count iterations of the function. If this is the first iteration then no prior
-     * data are stored so it is not feasible to continue.  */
-    if(uEpochCurrentIteration++ == 0U)
-    {
-        /* just store predicted Q value as an old one and wait for next iteration */
-        predictedQLast = predictedQ;
-        return;// predictedQ;
-    }
+    memcpy(predictedQ, fann_run(oNn, inputsCurrent), sizeof(float) * NN::dInputNumOf);
 
     /* generate random number in range 0..1. */
     float randNumber = (float)rand() / RAND_MAX;
     if (randNumber < epsilon) /* start exploration and see if the algorythm will find some peachy solution! */
     {
-        /* transpose randNumber from range 0..1 to -1..1. TODO maybe other range should be used */
-        randNumber = (randNumber - 0.5f) * 2.0f;
-        /* predicted Q is also an output. What a brilliant idea to simplify life! */
-        predictedQ += randNumber;
+        /* choose random action */;
+        action = (NN::ActionType_T)(rand() % (int)NN::dActionNumOf);
     }
-    /* else: trust that currently learned Q is good enough and use it */
+    else /* trust that currently learned Q is good enough and use it */
+    {
+        action = getBestAction(predictedQ);
+    }
 
+    /* increment or decrement angleShift by 0.1 degrees */
+    angleShift += (( NN::dActionIncrement == action ) - ( NN::dActionDecriment == action )) / 10.0f;
 
-    /* from now we won't be changing predicted Q. It is calculated for the this iteration, the case is over
-     * Not it is time to handle previously calculated Q and learn something for the future purposes.
+    /* count iterations of the function. If this is the first iteration then no prior
+     * data are stored so it is not feasible to continue - action first have to be done */
+    if (uEpochCurrentIteration++ == 0U)
+    {
+        /* just store predicted Q value as an old one and wait for next iteration */
+        actionLast = action;
+        angleShiftLast = angleShift;
+        mempcpy(predictedQLast, predictedQ, sizeof(float) * NN::dActionNumOf);
+        mempcpy(inputsLast, inputsCurrent, sizeof(float) * NN::dInputNumOf);
+        return;
+    }
 
-    /* get reward in this epoch iteration for using predictedQLast and obtaining inputsCurrent */
+    /* from now we won't be changing predicted Q values. It is calculated for the this iteration, the case is over.
+     * Now it is time to handle previously calculated Q and learn something for the future purposes.
+
+    /* get reward in this epoch iteration for using LAST action and obtaining inputsCurrent */
     calculateReward();
 
-    fann_train(oNn, inputsLast, &predictedQ);//or rather input angle?
+
+    /* to prevent from catastrophal forgetting, store some learned values in memory and learn basing on them */
+
+    /* if experience replay memory is not filled, just add the new one */
+    if (!bIsExperienceReplayFull)
+    {
+        storeExperience();
+    }
+    else /* experience replay batch is full */
+    {
+        storeExperience();
+
+        for (int miniBatchIterator=0; miniBatchIterator < dMINI_BATCH_SIZE; miniBatchIterator++)
+        {
+            /* select one random experience */
+            int randomExperienceIndex = rand() % dEXPERIENCE_REPLAY_BATCH_SIZE;
+
+            float *predictedQNew = fann_run(oNn, experienceReplay[randomExperienceIndex].inputsNew);
+            float maxQ = getMaxQ(predictedQNew);
+
+            float *predictedQOld = fann_run(oNn, experienceReplay[randomExperienceIndex].inputsOld);
+
+            /* if it is not a terminal state then set the old values as train data (output) - use new max in equation */
+            if (!isEpochFinished())
+            {
+                *predictedQOld = experienceReplay[randomExperienceIndex].reward + (dGAMMA * maxQ);
+            }
+            else
+            {
+                *predictedQOld = experienceReplay[randomExperienceIndex].reward;
+            }
+
+            /* store the adjusted data in mini batch fann train file */
+            memcpy(oTrainData->input[miniBatchIterator], experienceReplay[randomExperienceIndex].inputsOld, sizeof(float) * NN::dInputNumOf);
+            memcpy(oTrainData->output[miniBatchIterator], predictedQOld, sizeof(float) * NN::dActionNumOf);
+        }
+
+        /* train the data sets */
+        fann_train_on_data(oNn, oTrainData, dMINI_BATCH_SIZE, dMINI_BATCH_SIZE, 0.001);
+    }
+
+
+#if 0
+    //check if batch mem is filled the first time
+    if(batch_pos >= MAX_BATCH_MEM)
+    {
+        //if the list is filled once a time completely
+        //we start to set new data at random positions
+        //save outputs and inputs
+        int batch_rand_pos = rand() % MAX_BATCH_MEM;
+        memcpy(batch_mem[batch_rand_pos].inputs, old_in_p, NUM_INPUTS * sizeof(fann_type));
+        memcpy(batch_mem[batch_rand_pos].inputs_tp1, new_in_p, NUM_INPUTS * sizeof(fann_type));
+        memcpy(batch_mem[batch_rand_pos].reward, reward, NUM_SERVO_MOT * sizeof(fann_type));
+        memcpy(batch_mem[batch_rand_pos].servo_actions, actions, NUM_SERVO_MOT * sizeof(uint8_t));
+
+        /////////////////// experience reply //////////////////////
+        //sample a random set of MAX_BATCH_MEM to MIN_BATCH_MEM
+        for(int y = 0; y < MINI_BATCH_MEM; y++)
+        {
+            int mini_pos = rand() % MAX_BATCH_MEM;
+
+            //run the old copy of the ann with new inputs
+            //fann_type *newQ = fann_run(ann_cpy, batch_mem[mini_pos].inputs_tp1);
+            fann_type *newQ = fann_run(ann, batch_mem[mini_pos].inputs_tp1);
+
+            //search the maximum in newQ
+            fann_type maxQ[NUM_SERVO_MOT];
+            for(int x = 0; x < NUM_SERVO_MOT; x++)
+            {
+                ann_getMaxQandAction(x, newQ, &maxQ[x]);
+            }
+
+            fann_type *oldQ = fann_run(ann, batch_mem[mini_pos].inputs);
+
+            //set the old values as train data (output) - use new max in equation
+            for(int x = 0; x < NUM_SERVO_MOT; x++)
+            {
+                oldQ[batch_mem[mini_pos].servo_actions[x] * NUM_SERVO_MOT + x] = (batch_mem[mini_pos].reward[x] < 0.1) ? \
+                        (batch_mem[mini_pos].reward[x] + (gamma * maxQ[x])) : batch_mem[mini_pos].reward[x];
+            }
+
+            //store the data in mini batch fann train file
+            memcpy(train_data->input[y], batch_mem[mini_pos].inputs, NUM_INPUTS * sizeof(fann_type));
+            memcpy(train_data->output[y], oldQ, NUM_OUTPUTS * sizeof(fann_type));
+        }
+
+        //train the data sets
+        fann_train_on_data(ann, train_data, NUM_TRAIN_EPOCHS, NUM_TRAIN_EPOCHS, 0.001);
+
+        /////////////////// experience reply end //////////////////////
+    }
+    else
+    {
+        //save outputs and inputs
+        //memcpy(batch_mem[batch_pos].inputs, old_in_p, NUM_INPUTS * sizeof(fann_type));
+        //memcpy(batch_mem[batch_pos].inputs_tp1, new_in_p, NUM_INPUTS * sizeof(fann_type));
+        //memcpy(batch_mem[batch_pos].reward, reward, NUM_SERVO_MOT * sizeof(fann_type));
+        //memcpy(batch_mem[batch_pos].servo_actions, actions, NUM_SERVO_MOT * sizeof(uint8_t));
+
+        //this function use always backpropagation algorithm!
+        //fann_set_training_algorithm has no effect!
+        //or same as fann_set_training_algorithm = incremental and train epoch
+        //train ann   , input, desired outputs
+        //train only single data -> catastrophic forgetting could happen in the first MAX_BATCH_MEM moves
+        //fann_train(ann, old_in_p, qval);
+        fann_train(oNn, inputsLast, &inputsCurrent[NN::dInputAngularPosition]);//todo: it might be wrong
+        //batch_pos++;
+    }
+#endif
+
+
+    /* Decrease epsilon to base more on learned values */
+    if(epsilon > 0.1)
+        epsilon -= (1.0f / uEpochCurrentIteration);
 
     /* from now on the current prediction of Q becomes obsolete */
-    predictedQLast = predictedQ;
-    inputsLast[NN::dInputAngularPosition] = inputsCurrent[NN::dInputAngularPosition];
-    inputsLast[NN::dInputAngularVelocity] = inputsCurrent[NN::dInputAngularVelocity];
-    inputsLast[NN::dInputPosition]        = inputsCurrent[NN::dInputPosition];
-    inputsLast[NN::dInputVelocity]        = inputsCurrent[NN::dInputVelocity];
+    actionLast = action;
+    angleShiftLast = angleShift;
+    mempcpy(predictedQLast, predictedQ, sizeof(float) * NN::dActionNumOf);
+    mempcpy(inputsLast, inputsCurrent, sizeof(float) * NN::dInputNumOf);
+}
+
+void NeuralNetwork::storeExperience()
+{
+    if (experienceReplayIndex>=dEXPERIENCE_REPLAY_BATCH_SIZE)
+    {
+        bIsExperienceReplayFull = true;
+        experienceReplayIndex = 0;
+    }
+
+    mempcpy(experienceReplay[experienceReplayIndex].inputsOld, inputsLast, sizeof(float) * NN::dInputNumOf);
+    experienceReplay[experienceReplayIndex].action = actionLast;
+    mempcpy(experienceReplay[experienceReplayIndex].inputsNew, inputsCurrent, sizeof(float) * NN::dInputNumOf);
+    experienceReplay[experienceReplayIndex].reward = reward;
+
+    experienceReplayIndex++;
+}
+
+NN::ActionType_T NeuralNetwork::getBestAction(const float *const QValues)
+{
+    float biggestQ = 0.0f;
+    NN::ActionType_T bestAction = (NN::ActionType_T)0;
+
+    for (int i = 0; i < (int)NN::dActionNumOf; i++)
+    {
+        if (*(QValues + i) > biggestQ)
+        {
+            biggestQ = *(QValues + i);
+            bestAction = (NN::ActionType_T)i;
+        }
+    }
+    return bestAction;
+}
+
+float NeuralNetwork::getMaxQ(const float * const QValues)
+{
+    float biggestQ = 0.0f;
+    for (int i = 0; i < (int)NN::dActionNumOf; i++)
+    {
+        if (*(QValues + i) > biggestQ)
+        {
+            biggestQ = *(QValues + i);
+        }
+    }
+    return biggestQ;
 }
 
 #include "math.h"
 #define dTOTAL_POSSIBLE_PUNISHMENT      200.0f
-#define dWIN_LOSE_TO_PUNISHMENT_RATIO   5.0f
+#define dWIN_LOSE_TO_PUNISHMENT_RATIO   1.0f
 void NeuralNetwork::calculateReward()
 {
     if (!isLosingConditionReached())
@@ -128,7 +293,7 @@ void NeuralNetwork::calculateReward()
          * r = -|fi|/10 for |fi| = [0 to 10]deg
          * r = -1       for (fi > 10deg) || (fi < -10deg)
          */
-        float angleAbs = fabsf(predictedQLast - inputsCurrent[NN::dInputAngularPosition]);
+        float angleAbs = fabsf(angleShiftLast - inputsCurrent[NN::dInputAngularPosition]);
         float punishmentAngle = angleAbs < 10.0f ? angleAbs / 10.0f : 1.0f;
 
         /* total punishment is just an mean value of its components divided by ratio parameter.
@@ -152,7 +317,7 @@ void NeuralNetwork::calculateReward()
     }
     else
     {
-        /* punish with maximum possible value. It must be assured somewhere that
+        /* punish with maximum possible value. It must be checked somewhere that
          * training has failed and new learning proccess should be started. */
         reward -= 1.0f;
     }
@@ -177,7 +342,7 @@ bool NeuralNetwork::isWinningConditionReached()
     /* start looking for winning position after 40 iterations */
     if (uEpochCurrentIteration < 40) return false;
 
-    /* if position and angle were in range for last X iterations then it is a winning state */
+    /* if position was in range for last X iterations then it is a winning state */
     if (fabsf(positionDst - inputsCurrent[NN::dInputPosition]) > dPOSITION_WINNING) epochWhenPositionEnteredWinningPosition = 0;
     else epochWhenPositionEnteredWinningPosition++;
 
@@ -218,9 +383,11 @@ void NeuralNetwork::initNewEpoch()
     epsilon = 1.0f; /*!< start with random searching of optimal movements */
     memset(inputsCurrent, 0, sizeof(inputsCurrent[0]) * NN::dInputNumOf);
     memset(inputsLast, 0, sizeof(inputsLast[0]) * NN::dInputNumOf);
-    predictedQ = 0.0f;
-    predictedQLast = 0.0f;
+    memset(predictedQ, 0, sizeof(predictedQ[0]) * NN::dActionNumOf);
+    memset(predictedQLast, 0, sizeof(predictedQLast[0]) * NN::dActionNumOf);
     positionDst = 0.0f;
+    angleShift = 0.0f;
+    angleShiftLast = 0.0f;
     uEpochCounter++;
 }
 
@@ -243,7 +410,7 @@ uint_fast32_t NeuralNetwork::getEpochCounter()
  * \brief NeuralNetwork::getOutput - used to get output from previously trained network
  * \return - angle shift
  */
-float NeuralNetwork::getOutput()
+float NeuralNetwork::getAngleShift()
 {
-    return predictedQ;
+    return angleShift;
 }

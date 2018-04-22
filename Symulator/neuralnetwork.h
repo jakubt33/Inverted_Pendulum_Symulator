@@ -6,6 +6,8 @@
 
 namespace NN {
 
+#define dEXPERIENCE_REPLAY_BATCH_SIZE   50U
+
 typedef enum {
     dInputAngularPosition,
     dInputAngularVelocity,
@@ -14,6 +16,22 @@ typedef enum {
 
     dInputNumOf,
 }InputType_T;
+
+typedef enum {
+    dActionDecriment,
+    dActionNoChange,
+    dActionIncrement,
+
+    dActionNumOf,
+}ActionType_T;
+
+typedef struct
+{
+    float inputsOld[NN::dInputNumOf];
+    NN::ActionType_T action;
+    float inputsNew[NN::dInputNumOf];
+    float reward;
+} ExperienceReplayStruct_T;
 
 }
 
@@ -31,7 +49,7 @@ public:
     bool isEpochFinished();
     void initNewEpoch();
 
-    float getOutput();
+    float getAngleShift();
     float getReward();
     float getIterator();
     uint_fast32_t getEpochCounter();
@@ -44,10 +62,22 @@ private:
     struct fann_train_data *oTrainData;
     float inputsCurrent[NN::dInputNumOf];
     float inputsLast[NN::dInputNumOf];
-    float predictedQ;
-    float predictedQLast;
+    float predictedQ[NN::dActionNumOf];
+    float predictedQLast[NN::dActionNumOf];
 
-    float epsilon; /* determines probability of selecting random or maxQ moves */
+    NN::ActionType_T action;
+    NN::ActionType_T actionLast;
+
+    NN::ExperienceReplayStruct_T experienceReplay[dEXPERIENCE_REPLAY_BATCH_SIZE];
+    int experienceReplayIndex;
+    bool bIsExperienceReplayFull;
+    void storeExperience();
+
+    float angleShift;
+    float angleShiftLast;
+
+    /* determines probability of selecting random or maxQ moves */
+    float epsilon;
 
     /* incremented at each learning iteration (after every inputs update)*/
     uint_fast32_t uEpochCurrentIteration;
@@ -61,6 +91,9 @@ private:
     float reward;
 
     void calculateReward();
+
+    NN::ActionType_T getBestAction(const float * const QValues);
+    float getMaxQ(const float *const QValues);
 };
 
 #endif // NEURALNETWORK_H

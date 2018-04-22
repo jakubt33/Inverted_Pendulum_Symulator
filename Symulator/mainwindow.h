@@ -35,6 +35,8 @@ private slots:
     void on_buttonReset_clicked();
     void on_setAngle_clicked();
 
+    void on_checkBoxTrainingMode_clicked(bool checked);
+
 private:
     void RedrawPendulum(void);
 
@@ -59,7 +61,7 @@ private:
     Charts chartNn;
     Charts chartPWM;
 
-    float angleShift;
+    bool bEnabledDisplay;
 };
 
 #endif // MAINWINDOW_H
