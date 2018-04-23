@@ -9,12 +9,12 @@
 #define ANGLE_MAX               30.0f
 #define dITERAION_NUMBER_MAX    200U
 
-#define dNUM_LAYERS             4U
-#define dNUM_NEURONS_HIDDEN1    30U
+#define dNUM_LAYERS             3U
+#define dNUM_NEURONS_HIDDEN1    800U
 #define dNUM_NEURONS_HIDDEN2    20U
 #define dGAMMA                  0.99f
 
-#define dMINI_BATCH_SIZE        40U
+#define dMINI_BATCH_SIZE        1U
 
 NeuralNetwork::NeuralNetwork()
 {
@@ -22,7 +22,6 @@ NeuralNetwork::NeuralNetwork()
     oNn = fann_create_standard(dNUM_LAYERS,
                                NN::dInputNumOf,
                                dNUM_NEURONS_HIDDEN1,
-                               dNUM_NEURONS_HIDDEN2,
                                NN::dActionNumOf);
 
     /* stepwise is more then two times faster
@@ -49,6 +48,7 @@ NeuralNetwork::NeuralNetwork()
     uEpochCounter = 0;
     experienceReplayIndex = 0;
     bIsExperienceReplayFull = false;
+    epsilon = 1.0f; /*!< start with random searching of optimal movements */
     initNewEpoch();
     srand(time(NULL));   // initialize rand()
 }
@@ -71,7 +71,8 @@ void NeuralNetwork::learn(float inputAngularPosition,
     inputsCurrent[NN::dInputVelocity] = inputVelocity;
 
     /* We are in state S_n. Let's run the network and see if returned Q will be predicted correctly */
-    memcpy(predictedQ, fann_run(oNn, inputsCurrent), sizeof(float) * NN::dInputNumOf);
+    float *predictedQFresh = fann_run(oNn, inputsCurrent);
+    memcpy(predictedQ, predictedQFresh, sizeof(float) * NN::dActionNumOf);
 
     /* generate random number in range 0..1. */
     float randNumber = (float)rand() / RAND_MAX;
@@ -94,7 +95,6 @@ void NeuralNetwork::learn(float inputAngularPosition,
     {
         /* just store predicted Q value as an old one and wait for next iteration */
         actionLast = action;
-        angleShiftLast = angleShift;
         mempcpy(predictedQLast, predictedQ, sizeof(float) * NN::dActionNumOf);
         mempcpy(inputsLast, inputsCurrent, sizeof(float) * NN::dInputNumOf);
         return;
@@ -149,10 +149,6 @@ void NeuralNetwork::learn(float inputAngularPosition,
         fann_train_on_data(oNn, oTrainData, dMINI_BATCH_SIZE, 0, 0.001);
     }
 
-    /* Decrease epsilon to base more on learned values */
-    if(epsilon > 0.05)
-        epsilon -= (1.0f / uEpochCurrentIteration);
-
     /* from now on the current prediction of Q becomes obsolete */
     actionLast = action;
     angleShiftLast = angleShift;
@@ -160,9 +156,16 @@ void NeuralNetwork::learn(float inputAngularPosition,
     mempcpy(inputsLast, inputsCurrent, sizeof(float) * NN::dInputNumOf);
 }
 
+#define dMAX_EPOCHS_TO_LEARN 1000.0f
+void NeuralNetwork::decreaseEpsilon()
+{
+    /* Decrease epsilon to base more on learned values */
+    if (epsilon > 0.01f) epsilon -= (1.0f / dMAX_EPOCHS_TO_LEARN);
+}
+
 void NeuralNetwork::storeExperience()
 {
-    if (experienceReplayIndex>=dEXPERIENCE_REPLAY_BATCH_SIZE)
+    if (experienceReplayIndex >= dEXPERIENCE_REPLAY_BATCH_SIZE)
     {
         bIsExperienceReplayFull = true;
         experienceReplayIndex = 0;
@@ -207,41 +210,39 @@ float NeuralNetwork::getMaxQ(const float * const QValues)
 
 #include "math.h"
 #define dTOTAL_POSSIBLE_PUNISHMENT      200.0f
-#define dWIN_LOSE_TO_PUNISHMENT_RATIO   1.0f
+#define dWIN_LOSE_TO_PUNISHMENT_RATIO   5.0f
 void NeuralNetwork::calculateReward()
 {
     if (!isLosingConditionReached())
     {
-        /* TODO: Probalby position punishment should have higher priority than
-         *       angle punishement to prevent from situation when angle is
-         *       reached but robot is moving and doesn't exceed boundaries
-         *       before last epoch iteration.
-         *       But maybe reward for reaching position goal will be enough *
-         */
+        /* temporal difference algorithm is used so reward is calculated and added after each action taken */
 
-
-        /* get punishment for the current position error.
+        /* get immediate reward/punishment for the current position error.
          * r = -|x|/10 for |x| = [0 to 10]cm
          * r = -1      for (x > 10cm) || (x < -10cm)
          */
-        float positionAbs = fabsf(positionDst - inputsCurrent[NN::dInputPosition]);
-        float punishmentPosition = positionAbs < 10.0f ? positionAbs / 10.0f : 1.0f;
+        float positionDiff = ( fabsf(positionDst - inputsLast[NN::dInputPosition])
+                             - fabsf(positionDst - inputsCurrent[NN::dInputPosition])
+                             ) * 50.0f;
+        float rewardPosition = (positionDiff < -1.0f) ? -1.0f : ((positionDiff > 1.0f) ? 1.0f : positionDiff);
 
-        /* get punishment for the current angle error. Destination angle is just an output of the net: Q
+        /* get immediate reward/punishment for the current angle error.
          * r = -|fi|/10 for |fi| = [0 to 10]deg
          * r = -1       for (fi > 10deg) || (fi < -10deg)
          */
-        float angleAbs = fabsf(angleShiftLast - inputsCurrent[NN::dInputAngularPosition]);
-        float punishmentAngle = angleAbs < 10.0f ? angleAbs / 10.0f : 1.0f;
+        float angleDiff = ( fabsf(angleShiftLast - inputsLast[NN::dInputAngularPosition])
+                          - fabsf(angleShiftLast - inputsCurrent[NN::dInputAngularPosition])
+                          ) * 30.0f;
+        float rewardAngle = (angleDiff < -1.0f) ? -1.0f : ((angleDiff > 1.0f) ? 1.0f : angleDiff);
 
         /* total punishment is just an mean value of its components divided by ratio parameter.
          * i.e: if there is 200 iterations then max punishment is -200.0 and if ratio is 5,
          *      then total punishment will be 0.2 (to keep ratio 5 for loosing or
          *      winning the game where +-1 point is given)
          */
-        float punishmentTotal = ((punishmentPosition + punishmentAngle) / 2.0f)
-                                / (dTOTAL_POSSIBLE_PUNISHMENT*dWIN_LOSE_TO_PUNISHMENT_RATIO);
-        reward -= punishmentTotal;
+        float rewardTotal = ((rewardPosition + rewardAngle) / 2.0f)
+                          / (/*dTOTAL_POSSIBLE_PUNISHMENT* */dWIN_LOSE_TO_PUNISHMENT_RATIO);
+        reward = rewardTotal;
 
         /* check if the net should not be awarded */
         if (isWinningConditionReached())
@@ -250,14 +251,14 @@ void NeuralNetwork::calculateReward()
              * TODO: this can be changed to a funtion instead of constant 1 value
              *       to award more better states
              */
-            reward += 2.0f;
+            reward += 0.2f;
         }
     }
     else
     {
         /* punish with maximum possible value. It must be checked somewhere that
          * training has failed and new learning proccess should be started. */
-        reward -= 1.0f;
+        reward = -1.0f;
     }
 }
 
@@ -275,32 +276,20 @@ bool NeuralNetwork::isLosingConditionReached()
 
 #define dNUMBER_OF_ITERATIONS_TO_WIN    40U
 #define dPOSITION_WINNING               1.0f
+#define dVELOCITY_WINNING               0.2f
+#define dANGLE_WINNING                  1.0f
 bool NeuralNetwork::isWinningConditionReached()
 {
-    /* start looking for winning position after 40 iterations */
-    if (uEpochCurrentIteration < 40) return false;
+    bool bPositionWin = fabsf(positionDst - inputsCurrent[NN::dInputPosition]) < dPOSITION_WINNING;
+    bool bVelocityWin = fabsf(inputsCurrent[NN::dInputVelocity]) < dVELOCITY_WINNING;
+    bool bAngleWin = fabsf(angleShift-inputsCurrent[NN::dInputAngularPosition]) < dANGLE_WINNING;
 
-    /* if position was in range for last X iterations then it is a winning state */
-    if (fabsf(positionDst - inputsCurrent[NN::dInputPosition]) > dPOSITION_WINNING) epochWhenPositionEnteredWinningPosition = 0;
-    else epochWhenPositionEnteredWinningPosition++;
+    bool bIsWin = (bPositionWin && bVelocityWin && bAngleWin);
 
-#if 0 //todo: probably angle is not necessary to check winning conidition.
-    //todo: relative values should be taken into account (values fluctuations)
-    for( n = 0; n < numPoints; n++ )
-    {
-      varianceOfAngleFromLastXIterations += (Array[n] - mean) * (Array[n] - mean);
-    }
-    var /= numPoints;
-    if (fabsf(predictedQ-inputsCurrent[NN::dInputAngularPosition]) > dANGLE_WINNING) epochWhenAngleEnteredWinningPosition = 0;
-    else epochWhenAngleEnteredWinningPosition++;
-    if (  (epochWhenPositionEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN)
-       && (epochWhenAngleEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN) )
-#endif
-    if (epochWhenPositionEnteredWinningPosition >= dNUMBER_OF_ITERATIONS_TO_WIN)
-    {
-        return true;
-    }
-    return false;
+    if (!bIsWin) numberOfConsecutiveWinningPositions = 0U;
+    else numberOfConsecutiveWinningPositions++;
+
+    return bIsWin;
 }
 
 bool NeuralNetwork::isEpochTimeFinished()
@@ -310,15 +299,17 @@ bool NeuralNetwork::isEpochTimeFinished()
 
 bool NeuralNetwork::isEpochFinished()
 {
-    return isEpochTimeFinished() || isWinningConditionReached() || isLosingConditionReached();
+    bool bIsLost = isEpochTimeFinished() || isLosingConditionReached();
+    bool bIsWin = numberOfConsecutiveWinningPositions >= 40U ;
+
+    return bIsLost || bIsWin;
 }
 
 void NeuralNetwork::initNewEpoch()
 {
     reward = 0.0f;
-    uEpochCurrentIteration = 0;
-    epochWhenPositionEnteredWinningPosition = 0;
-    epsilon = 1.0f; /*!< start with random searching of optimal movements */
+    uEpochCurrentIteration = 0U;
+    numberOfConsecutiveWinningPositions = 0U;
     memset(inputsCurrent, 0, sizeof(inputsCurrent[0]) * NN::dInputNumOf);
     memset(inputsLast, 0, sizeof(inputsLast[0]) * NN::dInputNumOf);
     memset(predictedQ, 0, sizeof(predictedQ[0]) * NN::dActionNumOf);

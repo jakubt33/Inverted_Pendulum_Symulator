@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartNn.show();
     chartNn.setWindowTitle("NN");
-    chartNn.setLabelName("Reward", "Iterator", "Q");
+    chartNn.setLabelName("Reward", "Iterator", "AngleShift");
     chartNn.move(700,0);
     chartNn.setRange(5.5);
 
@@ -148,16 +148,14 @@ void MainWindow::Task1ms(void)
         {
             oPendulum->Initialize();
             /* update the list - it does not consume computing power */
-            ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward()));
+            ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward(),'f', 5));
             ui->numberTries->display((int)oNN.getEpochCounter());
             ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
 
-            if (bEnabledDisplay)
-            {
-                RedrawPendulum();
-            }
+            RedrawPendulum();
 
             oNN.initNewEpoch();
+            oNN.decreaseEpsilon();
         }
         else
         {
@@ -190,31 +188,30 @@ void MainWindow::Task1ms(void)
     }
 
     /* ====================== 20ms task ==================== */
-    if (prescaler % 25 == 0)
+    if (prescaler % 20 == 0)
     {
-        if (bEnabledDisplay)
-        {
-            /*  ==============  diagrams part  ====================  */
-            RedrawPendulum();
-            static float iterator = 0.0;
-            iterator += 0.02;
 
-            chartAngle.addData( oPendulum->GetAngularPosition(),
-                                oFuzzyControllerAngle->getDesiredPosition(),
-                                oPendulum->GetAngularVelocity()/10.0,
-                                iterator);
-            chartPosition.addData( oPendulum->GetCartPosition()*100.0,
-                                   0,
-                                   oPendulum->GetOmegaRPM()*5,
-                                   iterator);
+        /*  ==============  diagrams part  ====================  */
+        RedrawPendulum();
+        static float iterator = 0.0;
+        iterator += 0.02;
 
-            chartNn.addData( oNN.getReward(),
-                             oNN.getIterator()/1000,
-                             oNN.getAngleShift(),
-                             iterator );
+        chartAngle.addData( oPendulum->GetAngularPosition(),
+                            oFuzzyControllerAngle->getDesiredPosition(),
+                            oPendulum->GetAngularVelocity()/10.0,
+                            iterator);
+        chartPosition.addData( oPendulum->GetCartPosition()*100.0,
+                               0,
+                               oPendulum->GetOmegaRPM()*5,
+                               iterator);
 
-            chartPWM.addData( PWM, iterator );
-        }
+        chartNn.addData( oNN.getReward(),
+                         oNN.getIterator()/1000,
+                         oNN.getAngleShift(),
+                         iterator );
+
+        chartPWM.addData( PWM, iterator );
+
     }
 
     if (prescaler == 100) prescaler = 0;
@@ -286,21 +283,24 @@ void MainWindow::on_setAngle_clicked()
 
 void MainWindow::on_checkBoxTrainingMode_clicked(bool checked)
 {
-    ui->checkBoxTrainingMode->show();
-
     if (checked)
     {
         qTimerTask1ms->stop();
 
-        //bEnabledDisplay = false;
         int startNumberOfEpoch = oNN.getEpochCounter();
+        static int lastEpochNumber = startNumberOfEpoch;
         /* simulate 10 epoch */
-        while (oNN.getEpochCounter() < startNumberOfEpoch + 10)
+        while (oNN.getEpochCounter() < startNumberOfEpoch + 100)
         {
             // simulate 1ms task:
             Task1ms();
+
+            if ( lastEpochNumber != oNN.getEpochCounter())
+            {
+                QApplication::processEvents();
+                lastEpochNumber = oNN.getEpochCounter();
+            }
         }
-        bEnabledDisplay = true;
 
         ui->checkBoxTrainingMode->setChecked(false);
     }

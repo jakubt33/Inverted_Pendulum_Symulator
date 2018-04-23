@@ -57,8 +57,6 @@ private:
     Charts chartPosition;
     Charts chartNn;
     Charts chartPWM;
-
-    bool bEnabledDisplay;
 };
 
 #endif // MAINWINDOW_H

@@ -6,7 +6,7 @@
 
 namespace NN {
 
-#define dEXPERIENCE_REPLAY_BATCH_SIZE   150U
+#define dEXPERIENCE_REPLAY_BATCH_SIZE   1U
 
 typedef enum {
     dInputAngularPosition,
@@ -48,6 +48,7 @@ public:
 
     bool isEpochFinished();
     void initNewEpoch();
+    void decreaseEpsilon();
 
     float getAngleShift();
     float getReward();
@@ -85,7 +86,7 @@ private:
     uint_fast32_t uEpochCounter;
 
     /* used to check if position is in the winning position */
-    uint_fast32_t epochWhenPositionEnteredWinningPosition;
+    uint_fast32_t numberOfConsecutiveWinningPositions;
 
     float positionDst;
     float reward;
