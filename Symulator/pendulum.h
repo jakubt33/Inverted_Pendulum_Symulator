@@ -3,7 +3,7 @@
 
 #include <QtCore>
 
-#if 0
+#if 1
 #define pendulumAngleOffset 0.5f /*3.95f*/
 #else
 #define pendulumAngleOffset 0.0f

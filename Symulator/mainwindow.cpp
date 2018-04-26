@@ -125,8 +125,8 @@ void MainWindow::Task1ms(void)
 
     /*! Execute standing functionality */
     float PWM;
-    /* ====================== 50ms task ==================== */
-    if (prescaler % 50 == 0)
+    /* ====================== 100ms task ==================== */
+    if (prescaler % 100 == 0)
     {
 #if PID_CONTROLLER
     /*! Apply PID filter to motors to get required angle (output of omega regulator) */
@@ -172,12 +172,12 @@ void MainWindow::Task1ms(void)
     {
         /*  ================  fuzzy part  ====================  */
 #if NEURO_CONTROLLER
-        oFuzzyControllerAngle->setDesiredPosition(oNN.getAngleShift());
-#else
+        oFuzzyControllerPosition->setDesiredPosition(oNN.getAngleShift());
+#endif
+
         oFuzzyControllerPosition->updateInputs(oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
         oFuzzyControllerPosition->execute();
         oFuzzyControllerAngle->setDesiredPosition(oFuzzyControllerPosition->getOutput());
-#endif
 
         oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity());
         oFuzzyControllerAngle->execute();

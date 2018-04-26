@@ -4,10 +4,11 @@
 #include <time.h>   //needed for rand() func
 #include <stdlib.h> //needed for rand() func
 #include "string.h" //memset
+#include "float.h" //float min value
 
-#define POSITION_MAX            30.0f
+#define POSITION_MAX            5.0f
 #define ANGLE_MAX               30.0f
-#define dITERAION_NUMBER_MAX    200U
+#define dITERAION_NUMBER_MAX    20U
 
 #define dNUM_LAYERS             3U
 #define dNUM_NEURONS_HIDDEN1    800U
@@ -65,8 +66,8 @@ void NeuralNetwork::learn(float inputAngularPosition,
                           float inputVelocity)
 {
     /* inputs that are achieved by using predicted Q in last iteration */
-    inputsCurrent[NN::dInputAngularPosition] = inputAngularPosition;
-    inputsCurrent[NN::dInputAngularVelocity] = inputAngularVelocity;
+    //inputsCurrent[NN::dInputAngularPosition] = inputAngularPosition;
+    //inputsCurrent[NN::dInputAngularVelocity] = inputAngularVelocity;
     inputsCurrent[NN::dInputPosition] = inputPosition;
     inputsCurrent[NN::dInputVelocity] = inputVelocity;
 
@@ -74,19 +75,19 @@ void NeuralNetwork::learn(float inputAngularPosition,
     memcpy(predictedQ, fann_run(oNn, inputsCurrent), sizeof(float) * NN::dActionNumOf);
 
     /* generate random number in range 0..1. */
-    float randNumber = (float)rand() / RAND_MAX;
-    if (randNumber < epsilon) /* start exploration and see if the algorythm will find some peachy solution! */
+    //float randNumber = (float)rand() / RAND_MAX;
+    //if (randNumber < epsilon) /* start exploration and see if the algorythm will find some peachy solution! */
     {
         /* choose random action */;
-        action = (NN::ActionType_T)(rand() % (int)NN::dActionNumOf);
+    //    action = (NN::ActionType_T)(rand() % (int)NN::dActionNumOf);
     }
-    else /* trust that currently learned Q is good enough and use it */
+    //else /* trust that currently learned Q is good enough and use it */
     {
         action = getBestAction(predictedQ);
     }
 
     /* increment or decrement angleShift by 0.1 degrees */
-    angleShift += (( NN::dActionIncrement == action ) - ( NN::dActionDecriment == action )) / 10.0f;
+    angleShift += ((NN::dActionIncrement == action) - (NN::dActionDecriment == action)) / 10.0f;
 
     /* count iterations of the function. If this is the first iteration then no prior
      * data are stored so it is not feasible to continue - action first have to be done */
@@ -112,8 +113,6 @@ void NeuralNetwork::learn(float inputAngularPosition,
     storeExperience();
     if (bIsExperienceReplayFull)
     {
-        storeExperience();
-
         for (int miniBatchIterator=0; miniBatchIterator < dMINI_BATCH_SIZE; miniBatchIterator++)
         {
             /* select one random experience */
@@ -163,7 +162,6 @@ void NeuralNetwork::storeExperience()
 {
     if (experienceReplayIndex >= dEXPERIENCE_REPLAY_BATCH_SIZE)
     {
-        bIsExperienceReplayFull = true;
         experienceReplayIndex = 0;
     }
 
@@ -172,12 +170,15 @@ void NeuralNetwork::storeExperience()
     mempcpy(experienceReplay[experienceReplayIndex].inputsNew, inputsCurrent, sizeof(float) * NN::dInputNumOf);
     experienceReplay[experienceReplayIndex].reward = reward;
 
-    experienceReplayIndex++;
+    if (++experienceReplayIndex >= dEXPERIENCE_REPLAY_BATCH_SIZE)
+    {
+        bIsExperienceReplayFull = true;
+    }
 }
 
 NN::ActionType_T NeuralNetwork::getBestAction(const float *const QValues)
 {
-    float biggestQ = 0.0f;
+    float biggestQ = -FLT_MAX;
     NN::ActionType_T bestAction = (NN::ActionType_T)0;
 
     for (int i = 0; i < (int)NN::dActionNumOf; i++)
@@ -193,7 +194,7 @@ NN::ActionType_T NeuralNetwork::getBestAction(const float *const QValues)
 
 float NeuralNetwork::getMaxQ(const float * const QValues)
 {
-    float biggestQ = 0.0f;
+    float biggestQ = -FLT_MAX;
     for (int i = 0; i < (int)NN::dActionNumOf; i++)
     {
         if (*(QValues + i) > biggestQ)
@@ -209,7 +210,7 @@ float NeuralNetwork::getMaxQ(const float * const QValues)
 #define dWIN_LOSE_TO_PUNISHMENT_RATIO   5.0f
 void NeuralNetwork::calculateReward()
 {
-    if (!isLosingConditionReached())
+    if (!isEpochFinished())
     {
         /* temporal difference algorithm is used so reward is calculated and added after each action taken */
 
@@ -241,21 +242,23 @@ void NeuralNetwork::calculateReward()
         //reward = rewardTotal;
 
         reward = rewardPosition;
-        /* check if the net should not be awarded */
+    }
+    else
+    {
         if (isWinningConditionReached())
         {
             /* give a cookie for a good behaviour
              * TODO: this can be changed to a funtion instead of constant 1 value
              *       to award more better states
              */
-            //reward += 0.2f;
+            reward = 1.0f;
         }
-    }
-    else
-    {
-        /* punish with maximum possible value. It must be checked somewhere that
-         * training has failed and new learning proccess should be started. */
-        reward = -1.0f;
+        else /* losing */
+        {
+            /* punish with maximum possible value. It must be checked somewhere that
+             * training has failed and new learning proccess should be started. */
+            reward = -1.0f;
+        }
     }
 }
 
@@ -266,7 +269,7 @@ void NeuralNetwork::calculateReward()
 bool NeuralNetwork::isLosingConditionReached()
 {
     bool positionFail = fabsf(inputsCurrent[NN::dInputPosition]) > POSITION_MAX;
-    bool angleFail = fabsf(inputsCurrent[NN::dInputAngularPosition]) > ANGLE_MAX;
+    bool angleFail = 0; //fabsf(inputsCurrent[NN::dInputAngularPosition]) > ANGLE_MAX;
 
     return positionFail || angleFail;
 }
@@ -279,7 +282,7 @@ bool NeuralNetwork::isWinningConditionReached()
 {
     bool bPositionWin = fabsf(positionDst - inputsCurrent[NN::dInputPosition]) < dPOSITION_WINNING;
     bool bVelocityWin = fabsf(inputsCurrent[NN::dInputVelocity]) < dVELOCITY_WINNING;
-    bool bAngleWin = fabsf(angleShift-inputsCurrent[NN::dInputAngularPosition]) < dANGLE_WINNING;
+    bool bAngleWin = 1 /*fabsf(angleShift-inputsCurrent[NN::dInputAngularPosition]) < dANGLE_WINNING*/;
 
     bool bIsWin = (bPositionWin && bVelocityWin && bAngleWin);
 
