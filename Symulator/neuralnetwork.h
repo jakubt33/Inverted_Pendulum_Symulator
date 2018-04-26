@@ -9,8 +9,6 @@ namespace NN {
 #define dEXPERIENCE_REPLAY_BATCH_SIZE   1U
 
 typedef enum {
-//    dInputAngularPosition,
-//    dInputAngularVelocity,
     dInputPosition,
     dInputVelocity,
 
@@ -18,9 +16,13 @@ typedef enum {
 }InputType_T;
 
 typedef enum {
-    dActionDecriment,
-    dActionNoChange,
-    dActionIncrement,
+    dActionM15,
+    dActionM10,
+    dActionM5,
+    dAction0,
+    dActionP5,
+    dActionP10,
+    dActionP15,
 
     dActionNumOf,
 }ActionType_T;

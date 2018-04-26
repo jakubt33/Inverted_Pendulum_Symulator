@@ -18,6 +18,17 @@
 
 #define dMINI_BATCH_SIZE        1U
 
+static const float tActionMap[NN::dActionNumOf] =
+{
+    [NN::dActionM15] = -15.0f,
+    [NN::dActionM10] = -10.0f,
+    [NN::dActionM5]  = -5.0f,
+    [NN::dAction0]   =  0.0f,
+    [NN::dActionP5]  =  5.0f,
+    [NN::dActionP10] =  10.0f,
+    [NN::dActionP15] =  15.0f,
+};
+
 NeuralNetwork::NeuralNetwork()
 {
     /* 4 inputs, 100 hidden neurons, 3 output */
@@ -74,7 +85,7 @@ void NeuralNetwork::run(float inputPosition,
     action = getBestAction(predictedQ);
 
     /* increment or decrement angleShift by 0.1 degrees */
-    angleShift += ((NN::dActionIncrement == action) - (NN::dActionDecriment == action)) / 10.0f;
+    angleShift = tActionMap[action];
 
     calculateReward();
 }
@@ -106,7 +117,7 @@ void NeuralNetwork::learn(float inputAngularPosition,
     }
 
     /* increment or decrement angleShift by 0.1 degrees */
-    angleShift += ((NN::dActionIncrement == action) - (NN::dActionDecriment == action)) / 10.0f;
+    angleShift = tActionMap[action];
 
     /* count iterations of the function. If this is the first iteration then no prior
      * data are stored so it is not feasible to continue - action first have to be done */
@@ -291,7 +302,7 @@ bool NeuralNetwork::isLosingConditionReached()
     return positionFail || angleFail;
 }
 
-#define dPOSITION_WINNING               1.0f
+#define dPOSITION_WINNING               2.0f
 #define dVELOCITY_WINNING               0.05f
 bool NeuralNetwork::isWinningConditionReached()
 {
