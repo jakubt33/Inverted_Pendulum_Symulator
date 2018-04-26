@@ -46,6 +46,9 @@ public:
                float inputPosition,
                float inputVelocity);
 
+    void run(float inputPosition,
+             float inputVelocity);
+
     bool isEpochFinished();
     void initNewEpoch();
     void decreaseEpsilon();

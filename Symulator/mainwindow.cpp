@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     chartNn.show();
     chartNn.setWindowTitle("NN");
-    chartNn.setLabelName("Reward", "Iterator", "AngleShift");
+    chartNn.setLabelName("Reward", "Iterator", "PosShift");
     chartNn.move(700,0);
     chartNn.setRange(5.5);
 
@@ -144,25 +144,32 @@ void MainWindow::Task1ms(void)
 
 #if NEURO_CONTROLLER
         /*  ================  neuro part  ====================  */
-        if (oNN.isEpochFinished())
+        if (ui->checkBoxTrainingMode->isChecked())
         {
-            oPendulum->Initialize();
-            /* update the list - it does not consume computing power */
-            ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward(),'f', 5));
-            ui->numberTries->display((int)oNN.getEpochCounter());
-            ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
+            if (oNN.isEpochFinished())
+            {
+                oPendulum->Initialize();
+                /* update the list - it does not consume computing power */
+                ui->listOfRewardsWidget->addItem(QString::number(oNN.getReward(),'f', 5));
+                ui->numberTries->display((int)oNN.getEpochCounter());
+                ui->numberWins->display(ui->numberWins->value() + (int)oNN.isWinningConditionReached());
 
-            RedrawPendulum();
+                RedrawPendulum();
 
-            oNN.initNewEpoch();
-            oNN.decreaseEpsilon();
+                oNN.initNewEpoch();
+                oNN.decreaseEpsilon();
+            }
+            else
+            {
+                /* Now critic is fed with new data and output of RL NN can be gathered (it means
+                 * that robot state parameters will be passed through the network to get the output) */
+                oNN.learn(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity(),
+                          oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
+            }
         }
         else
         {
-            /* Now critic is fed with new data and output of RL NN can be gathered (it means
-             * that robot state parameters will be passed through the network to get the output) */
-            oNN.learn(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity(),
-                      oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
+            oNN.run(oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
         }
 #endif
     }
@@ -290,7 +297,7 @@ void MainWindow::on_checkBoxTrainingMode_clicked(bool checked)
         int startNumberOfEpoch = oNN.getEpochCounter();
         static int lastEpochNumber = startNumberOfEpoch;
         /* simulate 10 epoch */
-        while (oNN.getEpochCounter() < startNumberOfEpoch + 100)
+        while (oNN.getEpochCounter() < startNumberOfEpoch + 20)
         {
             // simulate 1ms task:
             Task1ms();
