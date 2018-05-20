@@ -12,11 +12,11 @@
 #define dITERAION_TO_WIN        20U
 
 #define dNUM_LAYERS             3U
-#define dNUM_NEURONS_HIDDEN1    800U
+#define dNUM_NEURONS_HIDDEN1    100U
 #define dNUM_NEURONS_HIDDEN2    20U
 #define dGAMMA                  0.99f
 
-#define dMINI_BATCH_SIZE        1U
+#define dMINI_BATCH_SIZE        10U
 
 static const float tActionMap[NN::dActionNumOf] =
 {
@@ -43,7 +43,7 @@ NeuralNetwork::NeuralNetwork()
     fann_set_activation_function_output(oNn, FANN_SIGMOID_SYMMETRIC_STEPWISE);
 
     /* fann_set_training_algorithm(oNn, FANN_TRAIN_QUICKPROP); */
-    fann_set_learning_momentum(oNn, 0.02f);
+    fann_set_learning_momentum(oNn, 0.9f);
 
     /* by default. Real learning rate should depend on measured error */
     fann_set_learning_rate(oNn, 0.1f);
@@ -52,7 +52,7 @@ NeuralNetwork::NeuralNetwork()
     fann_set_training_algorithm(oNn, FANN_TRAIN_BATCH);
 
     /* set some random weights */
-    fann_randomize_weights(oNn, -0.01f, 0.01f);
+    fann_randomize_weights(oNn, -0.15f, 0.15f);
 
     /* create training data */
     oTrainData = fann_create_train(dMINI_BATCH_SIZE, NN::dInputNumOf, NN::dActionNumOf);
@@ -61,7 +61,7 @@ NeuralNetwork::NeuralNetwork()
     uEpochCounter = 0;
     experienceReplayIndex = 0;
     bIsExperienceReplayFull = false;
-    epsilon = 1.0f; /*!< start with random searching of optimal movements */
+    epsilon = 0.0f; /*!< start with random searching of optimal movements */
     initNewEpoch();
     srand(time(NULL));   // initialize rand()
 }
@@ -90,14 +90,10 @@ void NeuralNetwork::run(float inputPosition,
     calculateReward();
 }
 
-void NeuralNetwork::learn(float inputAngularPosition,
-                          float inputAngularVelocity,
-                          float inputPosition,
+void NeuralNetwork::learn(float inputPosition,
                           float inputVelocity)
 {
     /* inputs that are achieved by using predicted Q in last iteration */
-    //inputsCurrent[NN::dInputAngularPosition] = inputAngularPosition;
-    //inputsCurrent[NN::dInputAngularVelocity] = inputAngularVelocity;
     inputsCurrent[NN::dInputPosition] = inputPosition;
     inputsCurrent[NN::dInputVelocity] = inputVelocity;
 
@@ -105,13 +101,13 @@ void NeuralNetwork::learn(float inputAngularPosition,
     memcpy(predictedQ, fann_run(oNn, inputsCurrent), sizeof(float) * NN::dActionNumOf);
 
     /* generate random number in range 0..1. */
-    //float randNumber = (float)rand() / RAND_MAX;
-    //if (randNumber < epsilon) /* start exploration and see if the algorythm will find some peachy solution! */
+    float randNumber = (float)rand() / RAND_MAX;
+    if (randNumber < epsilon) /* start exploration and see if the algorythm will find some peachy solution! */
     {
         /* choose random action */;
-    //    action = (NN::ActionType_T)(rand() % (int)NN::dActionNumOf);
+        action = (NN::ActionType_T)(rand() % (int)NN::dActionNumOf);
     }
-    //else /* trust that currently learned Q is good enough and use it */
+    else /* trust that currently learned Q is good enough and use it */
     {
         action = getBestAction(predictedQ);
     }
@@ -181,11 +177,11 @@ void NeuralNetwork::learn(float inputAngularPosition,
     mempcpy(inputsLast, inputsCurrent, sizeof(float) * NN::dInputNumOf);
 }
 
-#define dMAX_EPOCHS_TO_LEARN 1000.0f
+#define dMAX_EPOCHS_TO_LEARN 200.0f
 void NeuralNetwork::decreaseEpsilon()
 {
     /* Decrease epsilon to base more on learned values */
-    if (epsilon > 0.01f) epsilon -= (1.0f / dMAX_EPOCHS_TO_LEARN);
+    if (epsilon > 0.0f) epsilon -= (1.0f / dMAX_EPOCHS_TO_LEARN);
 }
 
 void NeuralNetwork::storeExperience()
@@ -302,7 +298,7 @@ bool NeuralNetwork::isLosingConditionReached()
     return positionFail || angleFail;
 }
 
-#define dPOSITION_WINNING               2.0f
+#define dPOSITION_WINNING               3.5f
 #define dVELOCITY_WINNING               0.05f
 bool NeuralNetwork::isWinningConditionReached()
 {
@@ -367,4 +363,15 @@ uint_fast32_t NeuralNetwork::getEpochCounter()
 float NeuralNetwork::getAngleShift()
 {
     return angleShift;
+}
+
+
+void NeuralNetwork::save()
+{
+   fann_save(oNn, "weights.net");
+}
+
+void NeuralNetwork::read()
+{
+   oNn = fann_create_from_file("weights.net");
 }

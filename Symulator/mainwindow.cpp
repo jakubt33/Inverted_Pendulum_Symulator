@@ -60,10 +60,6 @@ MainWindow::MainWindow(QWidget *parent) :
     qTimerTask1ms = new QTimer(this);
     connect(qTimerTask1ms, SIGNAL(timeout()), this, SLOT(Task1ms() ));
 
-    /* Task 32ms */
-    qTimerTask32ms = new QTimer(this);
-    connect(qTimerTask32ms, SIGNAL(timeout()), this, SLOT(Task32ms() ));
-
     InitializeMotors();
 
     chartAngle.show();
@@ -99,7 +95,6 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete qTimerTask1ms;
-    delete qTimerTask32ms;
 }
 
 void MainWindow::RedrawPendulum(void)
@@ -113,34 +108,43 @@ void MainWindow::RedrawPendulum(void)
 }
 
 #define FUZZY_CONTROLLER 1
-#define NEURO_CONTROLLER 1
+#define NEURO_CONTROLLER 0
 #define PID_CONTROLLER   0
 
 void MainWindow::Task1ms(void)
 {
-    static int8_t prescaler = 0;
+    static int prescaler = 0;
     prescaler++;
 
     oPendulum->Perform();
 
     /*! Execute standing functionality */
     float PWM;
+
+
+    /* ====================== 8ms task ==================== */
+    if (prescaler % 8 == 0)
+    {
+#if PID_CONTROLLER
+        /*! Apply PID filter to motors to get required angle (output of omega regulator) */
+        oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum->GetAngularPosition() /*oMpuKalman.AngleFiltered*/ );
+
+        PWM = oPID_Angle.Parameters.OutSignal;
+
+        if     ( 0 < PWM && PWM <  100 ) PWM =  ( PWM / 10 ) * ( PWM / 10 );
+        else if( 0 > PWM && PWM > -100 ) PWM = -( PWM / 10 ) * ( PWM / 10 );
+
+        /*! Check if PWM is within boundaries */
+        ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
+
+        oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+#endif
+    }
+
     /* ====================== 100ms task ==================== */
     if (prescaler % 100 == 0)
     {
-#if PID_CONTROLLER
-    /*! Apply PID filter to motors to get required angle (output of omega regulator) */
-    oPID_Angle.ApplyPid( &oPID_Angle.Parameters, -oPendulum->GetAngleDegrees() /*oMpuKalman.AngleFiltered*/ );
-
-    PWM = oPID_Angle.Parameters.OutSignal;
-
-    if     ( 0 < PWM && PWM <  100 ) PWM =  ( PWM / 10 ) * ( PWM / 10 );
-    else if( 0 > PWM && PWM > -100 ) PWM = -( PWM / 10 ) * ( PWM / 10 );
-
-    /*! Check if PWM is within boundaries */
-    ( 1000.0f < PWM ) ? ( PWM = 1000.0f ) : ( ( -1000.0f > PWM ) ? ( PWM = -1000.0f ) : ( PWM ) );
-
-#elif FUZZY_CONTROLLER
+#if FUZZY_CONTROLLER
 
 #if NEURO_CONTROLLER
         /*  ================  neuro part  ====================  */
@@ -163,8 +167,7 @@ void MainWindow::Task1ms(void)
             {
                 /* Now critic is fed with new data and output of RL NN can be gathered (it means
                  * that robot state parameters will be passed through the network to get the output) */
-                oNN.learn(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity(),
-                          oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
+                oNN.learn(oPendulum->GetCartPosition()*100, oPendulum->GetOmegaRPM());
             }
         }
         else
@@ -189,9 +192,10 @@ void MainWindow::Task1ms(void)
         oFuzzyControllerAngle->updateInputs(oPendulum->GetAngularPosition(), oPendulum->GetAngularVelocity());
         oFuzzyControllerAngle->execute();
         PWM = oFuzzyControllerAngle->getOutput();
-#endif
+
 
         oPendulum->SetForce( (double)PWM/40.0 );// PWM/40 is a radius of a wheel. M_max=1000N*mm, F=M/r
+#endif
     }
 
     /* ====================== 20ms task ==================== */
@@ -218,30 +222,37 @@ void MainWindow::Task1ms(void)
                          iterator );
 
         chartPWM.addData( PWM, iterator );
-
     }
 
-    if (prescaler == 100) prescaler = 0;
-}
+    /* ====================== 16ms task ==================== */
+    if (prescaler % 16 == 0)
+    {
+        saveAngle( -oPendulum->GetAngularPosition() );
+    }
 
-#define AngleOffset pendulumAngleOffset
-void MainWindow::Task32ms(void)
-{
+    /* ====================== 32ms task ==================== */
+    static float distortion = -1.0;
+    if (prescaler % 32 == 0)
+    {
 #if PID_CONTROLLER
-    /*! Calculate mean omega of the robot */
-    //oEncoders.Perform();
-    float OmegaMean = (float)oPendulum->GetOmegaRPM();
-    //float OmegaMean = ( oEncoders.GetOmegaLeft() + oEncoders.GetOmegaRight() ) / 2;
-    //float OmegaDiff = ( oEncoders.GetOmegaLeft() - oEncoders.GetOmegaRight() );
+#define AngleOffset pendulumAngleOffset
+        /*! Calculate mean omega of the robot */
+        //oEncoders.Perform();
+        float OmegaMean = (float)oPendulum->GetOmegaRPM();
+        //float OmegaMean = ( oEncoders.GetOmegaLeft() + oEncoders.GetOmegaRight() ) / 2;
+        //float OmegaDiff = ( oEncoders.GetOmegaLeft() - oEncoders.GetOmegaRight() );
 
-    /*! Apply PID filter to motors to get required omega */
-    oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
-    //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
-    oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset );
-    //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
-#elif FUZZY_CONTROLLER
-
+        /*! Apply PID filter to motors to get required omega */
+        oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
+        //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
+        oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset + distortion );
+        //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 #endif
+    }
+
+    if (prescaler % 800 == 0) distortion = -distortion;
+
+    if (prescaler == 3200) prescaler = 0;
 }
 
 void MainWindow::on_buttonAddForce_clicked()
@@ -258,19 +269,16 @@ void MainWindow::on_buttonPauseResume_clicked()
     if (qTimerTask1ms->isActive())
     {
         qTimerTask1ms->stop();
-        //qTimerTask32ms->stop();
     }
     else
     {
         qTimerTask1ms->start(1);
-        //qTimerTask32ms->start(32);
     }
 }
 
 void MainWindow::on_buttonReset_clicked()
 {
     qTimerTask1ms->stop();
-    qTimerTask32ms->stop();
     InitializeMotors();
 
     oPendulum->Initialize();
@@ -290,25 +298,42 @@ void MainWindow::on_setAngle_clicked()
 
 void MainWindow::on_checkBoxTrainingMode_clicked(bool checked)
 {
-    if (checked)
+    qTimerTask1ms->stop();
+
+    int startNumberOfEpoch = oNN.getEpochCounter();
+    static int lastEpochNumber = startNumberOfEpoch;
+    /* simulate 10 epoch */
+    while (oNN.getEpochCounter() < startNumberOfEpoch + 200)
     {
-        qTimerTask1ms->stop();
+        // simulate 1ms task:
+        Task1ms();
 
-        int startNumberOfEpoch = oNN.getEpochCounter();
-        static int lastEpochNumber = startNumberOfEpoch;
-        /* simulate 10 epoch */
-        while (oNN.getEpochCounter() < startNumberOfEpoch + 20)
+        if ( lastEpochNumber != oNN.getEpochCounter())
         {
-            // simulate 1ms task:
-            Task1ms();
-
-            if ( lastEpochNumber != oNN.getEpochCounter())
-            {
-                QApplication::processEvents();
-                lastEpochNumber = oNN.getEpochCounter();
-            }
+            QApplication::processEvents();
+            lastEpochNumber = oNN.getEpochCounter();
         }
-
-        ui->checkBoxTrainingMode->setChecked(false);
     }
+    ui->checkBoxTrainingMode->setChecked(false);
+}
+
+void MainWindow::on_buttonSave_clicked()
+{
+    oNN.save();
+}
+
+void MainWindow::on_buttonRead_clicked()
+{
+    oNN.read();
+}
+
+void MainWindow::saveAngle( float value )
+{
+    FILE *conf = fopen("angles.txt", "a+");
+
+    if (!conf) return;
+
+    fprintf(conf, "%f\n", value);
+
+    fclose(conf);
 }

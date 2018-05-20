@@ -6,7 +6,7 @@
 
 namespace NN {
 
-#define dEXPERIENCE_REPLAY_BATCH_SIZE   1U
+#define dEXPERIENCE_REPLAY_BATCH_SIZE   100U
 
 typedef enum {
     dInputPosition,
@@ -43,9 +43,7 @@ public:
     NeuralNetwork();
     ~NeuralNetwork();
 
-    void learn(float inputAngularPosition,
-               float inputAngularVelocity,
-               float inputPosition,
+    void learn(float inputPosition,
                float inputVelocity);
 
     void run(float inputPosition,
@@ -62,6 +60,9 @@ public:
     bool isLosingConditionReached();
     bool isWinningConditionReached();
     bool isEpochTimeFinished();
+
+    void save();
+    void read();
 
 private:
     struct fann *oNn;

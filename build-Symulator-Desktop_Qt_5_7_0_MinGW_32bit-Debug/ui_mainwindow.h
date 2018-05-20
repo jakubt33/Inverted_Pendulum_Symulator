@@ -46,6 +46,8 @@ public:
     QLCDNumber *numberWins;
     QLabel *labelWinsCounter;
     QListWidget *listOfRewardsWidget;
+    QPushButton *buttonSave;
+    QPushButton *buttonRead;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -105,6 +107,12 @@ public:
         listOfRewardsWidget = new QListWidget(centralWidget);
         listOfRewardsWidget->setObjectName(QStringLiteral("listOfRewardsWidget"));
         listOfRewardsWidget->setGeometry(QRect(20, 20, 71, 131));
+        buttonSave = new QPushButton(centralWidget);
+        buttonSave->setObjectName(QStringLiteral("buttonSave"));
+        buttonSave->setGeometry(QRect(150, 170, 75, 23));
+        buttonRead = new QPushButton(centralWidget);
+        buttonRead->setObjectName(QStringLiteral("buttonRead"));
+        buttonRead->setGeometry(QRect(230, 170, 75, 23));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
@@ -132,6 +140,8 @@ public:
         checkBoxTrainingMode->setText(QApplication::translate("MainWindow", "Training Mode", 0));
         labelTriesCounter->setText(QApplication::translate("MainWindow", "Tries", 0));
         labelWinsCounter->setText(QApplication::translate("MainWindow", "Wins", 0));
+        buttonSave->setText(QApplication::translate("MainWindow", "Save NN", 0));
+        buttonRead->setText(QApplication::translate("MainWindow", "Read NN", 0));
     } // retranslateUi
 
 };

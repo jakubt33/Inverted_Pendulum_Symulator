@@ -26,7 +26,6 @@ public:
 
 public slots:
     void Task1ms(void);
-    void Task32ms(void);
 
 private slots:
     void on_buttonAddForce_clicked();
@@ -35,8 +34,13 @@ private slots:
     void on_setAngle_clicked();
     void on_checkBoxTrainingMode_clicked(bool checked);
 
+    void on_buttonSave_clicked();
+
+    void on_buttonRead_clicked();
+
 private:
     void RedrawPendulum(void);
+    void saveAngle(float value);
 
     Ui::MainWindow *ui;
     NeuralNetwork oNN;
@@ -44,7 +48,6 @@ private:
     std::unique_ptr<FuzzyController> oFuzzyControllerAngle;
     std::unique_ptr<FuzzyController> oFuzzyControllerPosition;
     QTimer *qTimerTask1ms;
-    QTimer *qTimerTask32ms;
 
     QGraphicsScene *scene;
     QGraphicsLineItem *xLine;
