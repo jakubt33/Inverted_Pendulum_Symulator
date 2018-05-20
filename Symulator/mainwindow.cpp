@@ -107,9 +107,9 @@ void MainWindow::RedrawPendulum(void)
                         mMeterToPx( oPendulum->GetMassAbsoluteXPosition() ), mMeterToPx( oPendulum->GetMassAbsoluteYPosition() ) );
 }
 
-#define FUZZY_CONTROLLER 1
+#define FUZZY_CONTROLLER 0
 #define NEURO_CONTROLLER 0
-#define PID_CONTROLLER   0
+#define PID_CONTROLLER   1
 
 void MainWindow::Task1ms(void)
 {
@@ -207,12 +207,12 @@ void MainWindow::Task1ms(void)
         static float iterator = 0.0;
         iterator += 0.02;
 
-        chartAngle.addData( oPendulum->GetAngularPosition(),
+        chartAngle.addData( oPendulum->GetAngularPosition() - oPendulum->GetAngleOffset(),
                             oFuzzyControllerAngle->getDesiredPosition(),
                             oPendulum->GetAngularVelocity()/10.0,
                             iterator);
         chartPosition.addData( oPendulum->GetCartPosition()*100.0,
-                               0,
+                               oPendulum->GetAngleOffset(),
                                oPendulum->GetOmegaRPM()*5,
                                iterator);
 
@@ -227,15 +227,14 @@ void MainWindow::Task1ms(void)
     /* ====================== 16ms task ==================== */
     if (prescaler % 16 == 0)
     {
-        saveAngle( -oPendulum->GetAngularPosition() );
+        saveAngle( -(oPendulum->GetAngularPosition()- oPendulum->GetAngleOffset()) );
     }
 
     /* ====================== 32ms task ==================== */
-    static float distortion = -1.0;
     if (prescaler % 32 == 0)
     {
 #if PID_CONTROLLER
-#define AngleOffset pendulumAngleOffset
+#define AngleOffset dPendulumDefaultAngleOffset
         /*! Calculate mean omega of the robot */
         //oEncoders.Perform();
         float OmegaMean = (float)oPendulum->GetOmegaRPM();
@@ -245,12 +244,17 @@ void MainWindow::Task1ms(void)
         /*! Apply PID filter to motors to get required omega */
         oPID_Omega.ApplyPid   ( &oPID_Omega.Parameters,    -OmegaMean );
         //oPID_Rotation.ApplyPid( &oPID_Rotation.Parameters, OmegaDiff );
-        oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset + distortion );
+        oPID_Angle.SetDstValue      ( &oPID_Angle.Parameters,       oPID_Omega.Parameters.OutSignal + AngleOffset );
         //oPID_AngleMoving.SetDstValue( &oPID_AngleMoving.Parameters, oPID_Omega.Parameters.OutSignal + AngleOffset );
 #endif
     }
 
-    if (prescaler % 800 == 0) distortion = -distortion;
+    if (prescaler % 800 == 0) {
+        static float distortion = -1.0;
+        distortion = -distortion;
+
+        oPendulum->SetAngleOffset(distortion);
+    }
 
     if (prescaler == 3200) prescaler = 0;
 }

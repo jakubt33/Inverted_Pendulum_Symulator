@@ -3,12 +3,7 @@
 
 #include <QtCore>
 
-#if 1
-#define pendulumAngleOffset 6.2f /*3.95f*/
-#else
-#define pendulumAngleOffset 0.0f
-#endif
-
+#define dPendulumDefaultAngleOffset     6.2f
 #define dTimePerformPendulum   ( 1.0f /*[ms]*/ )
 
 typedef struct
@@ -49,10 +44,14 @@ public:
     void SetForce( double dForce );
     double GetForce(void);
     void SetAngle(float newAngle);
+    void SetAngleOffset(float newOffset);
+    float GetAngleOffset(void);
 
 private:
     void integrateForwardRungeKutta4(double step);
     PendulumData_T kPendulumData;
+
+    float offset;
 };
 
 #endif // PENDULUM_H

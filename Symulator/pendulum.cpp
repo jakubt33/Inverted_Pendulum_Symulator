@@ -17,6 +17,7 @@
 
 Pendulum::Pendulum()
 {
+    offset = 0;
     this->Initialize();
 }
 
@@ -47,7 +48,7 @@ void Pendulum::integrateForwardRungeKutta4(double step)
     double m=this->kPendulumData.mass, M=this->kPendulumData.cartMass, l=this->kPendulumData.rodLength, f_lin=this->kPendulumData.linFriction, f_ang=this->kPendulumData.angFriction, g=this->kPendulumData.gravity, h=step;
     double z1=0.0, z2=0.0, z3=0.0, z4=0.0;
 
-    double angleShifted = this->kPendulumData.angularPosition + mDegToRad(pendulumAngleOffset);
+    double angleShifted = this->kPendulumData.angularPosition + mDegToRad(dPendulumDefaultAngleOffset);
 
     // Integration using Forward Runge-Kutta.
     K1 = this->kPendulumData.angularVelocity;
@@ -75,7 +76,7 @@ void Pendulum::integrateForwardRungeKutta4(double step)
     z3 = this->kPendulumData.cartPosition	  + h*(1.0/6.0*M1 + 2.0/6.0*M2 + 2.0/6.0*M3 + 1.0/6.0*M4);
     z4 = this->kPendulumData.cartVelocity   + h*(1.0/6.0*N1 + 2.0/6.0*N2 + 2.0/6.0*N3 + 1.0/6.0*N4);
 
-    this->kPendulumData.angularPosition = z1 - mDegToRad(pendulumAngleOffset);
+    this->kPendulumData.angularPosition = z1 - mDegToRad(dPendulumDefaultAngleOffset);
     this->kPendulumData.angularVelocity = z2;
     this->kPendulumData.cartPosition = z3;
     this->kPendulumData.cartVelocity = z4;
@@ -103,7 +104,7 @@ double Pendulum::GetAngularPosition(void)
     double angle = fmod(mRadToDeg(this->kPendulumData.angularPosition), 360.0);
     if(angle>180.0)angle -= 360.0;
     else if(angle<-180.0)angle += 360.0;
-    return angle;
+    return angle + offset;
 }
 
 double Pendulum::GetAngularVelocity(void)
@@ -156,4 +157,14 @@ double Pendulum::GetForce(void)
 void Pendulum::SetAngle(float newAngle)
 {
     this->kPendulumData.angularPosition = mDegToRad(newAngle);
+}
+
+void Pendulum::SetAngleOffset(float newOffset)
+{
+    offset = newOffset;
+}
+
+float Pendulum::GetAngleOffset(void)
+{
+    return offset;
 }
